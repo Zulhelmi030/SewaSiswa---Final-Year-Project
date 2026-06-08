@@ -1,0 +1,71 @@
+name: finalyearproject
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  animated_bottom_navigation_bar: ^1.3.3
+  anim_search_bar: ^2.0.3
+
+  # Backend
+  supabase_flutter: ^2.0.0
+
+  # Environment variables
+  flutter_dotenv: ^6.0.1
+
+  # State management
+  provider: ^6.1.0
+
+  # Navigation
+  go_router: ^17.2.3
+
+  # Maps & Location
+  google_maps_flutter: ^2.5.0
+  geolocator: ^14.0.2
+  geocoding: ^3.0.0
+
+  # Notifications
+  firebase_core: ^4.7.0
+  firebase_messaging: ^16.2.0
+
+  # Payments
+  flutter_stripe: ^12.6.0
+
+  # Image handling
+  image_picker: ^1.0.0
+  cached_network_image: ^3.3.0
+
+  # UI
+  cupertino_icons: ^1.0.8
+  google_fonts: ^8.1.0
+  skeletonizer: ^2.1.3
+  flutter_map: ^8.3.0
+  latlong2: ^0.9.1
+
+
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/logo.png"
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env
+    - assets/images/
+    - assets/icons/
+    - assets/data/

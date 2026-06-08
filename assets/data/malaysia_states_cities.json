@@ -1,0 +1,123 @@
+{
+  "states": [
+    {
+      "name": "Johor",
+      "cities": [
+        "Johor Bahru", "Skudai", "Batu Pahat", "Muar", "Kluang",
+        "Segamat", "Kulai", "Pontian", "Mersing", "Kota Tinggi"
+      ]
+    },
+    {
+      "name": "Kedah",
+      "cities": [
+        "Alor Setar", "Sungai Petani", "Kulim", "Langkawi", "Baling",
+        "Yan", "Pendang", "Kuala Nerang", "Padang Terap", "Pokok Sena"
+      ]
+    },
+    {
+      "name": "Kelantan",
+      "cities": [
+        "Kota Bharu", "Pasir Mas", "Tanah Merah", "Machang", "Kuala Krai",
+        "Gua Musang", "Jeli", "Bachok", "Tumpat", "Pasir Puteh"
+      ]
+    },
+    {
+      "name": "Kuala Lumpur",
+      "cities": [
+        "Bukit Bintang", "Chow Kit", "Kepong", "Wangsa Maju", "Titiwangsa",
+        "Setiawangsa", "Batu", "Segambut", "Lembah Pantai", "Bandar Tun Razak",
+        "Cheras", "Desa Petaling", "Mont Kiara", "Sri Hartamas"
+      ]
+    },
+    {
+      "name": "Labuan",
+      "cities": [
+        "Victoria", "Rancha-Rancha", "Layang-Layang", "Membedai"
+      ]
+    },
+    {
+      "name": "Melaka",
+      "cities": [
+        "Melaka City", "Alor Gajah", "Jasin", "Ayer Keroh", "Masjid Tanah",
+        "Merlimau", "Klebang", "Bukit Baru", "Pulau Sebang"
+      ]
+    },
+    {
+      "name": "Negeri Sembilan",
+      "cities": [
+        "Seremban", "Port Dickson", "Nilai", "Bahau", "Rembau",
+        "Tampin", "Kuala Pilah", "Jempol", "Senawang", "Mantin"
+      ]
+    },
+    {
+      "name": "Pahang",
+      "cities": [
+        "Kuantan", "Temerloh", "Bentong", "Raub", "Jerantut",
+        "Pekan", "Maran", "Bera", "Cameron Highlands", "Rompin",
+        "Lipis", "Kuala Lipis"
+      ]
+    },
+    {
+      "name": "Perak",
+      "cities": [
+        "Ipoh", "Taiping", "Teluk Intan", "Manjung", "Kampar",
+        "Lumut", "Kuala Kangsar", "Sitiawan", "Batu Gajah", "Tanjung Malim",
+        "Parit Buntar", "Slim River"
+      ]
+    },
+    {
+      "name": "Perlis",
+      "cities": [
+        "Kangar", "Arau", "Padang Besar", "Kuala Perlis"
+      ]
+    },
+    {
+      "name": "Pulau Pinang",
+      "cities": [
+        "George Town", "Butterworth", "Bukit Mertajam", "Seberang Perai",
+        "Bayan Lepas", "Nibong Tebal", "Kepala Batas", "Permatang Pauh",
+        "Balik Pulau", "Batu Ferringhi"
+      ]
+    },
+    {
+      "name": "Putrajaya",
+      "cities": [
+        "Precinct 1", "Precinct 2", "Precinct 3", "Precinct 4",
+        "Precinct 5", "Precinct 6", "Precinct 7", "Precinct 8",
+        "Precinct 9", "Precinct 10", "Precinct 11"
+      ]
+    },
+    {
+      "name": "Sabah",
+      "cities": [
+        "Kota Kinabalu", "Sandakan", "Tawau", "Lahad Datu", "Keningau",
+        "Semporna", "Kudat", "Papar", "Beaufort", "Ranau",
+        "Kota Belud", "Tuaran", "Putatan"
+      ]
+    },
+    {
+      "name": "Sarawak",
+      "cities": [
+        "Kuching", "Miri", "Sibu", "Bintulu", "Sri Aman",
+        "Sarikei", "Limbang", "Kapit", "Mukah", "Betong",
+        "Samarahan", "Serian", "Asajaya"
+      ]
+    },
+    {
+      "name": "Selangor",
+      "cities": [
+        "Shah Alam", "Petaling Jaya", "Subang Jaya", "Klang", "Kajang",
+        "Bangi", "Rawang", "Sepang", "Hulu Langat", "Ampang",
+        "Puchong", "Cyberjaya", "Putrajaya (Selangor)", "Batu Caves",
+        "Kuala Selangor", "Sabak Bernam", "Kuala Kubu Bharu", "Semenyih"
+      ]
+    },
+    {
+      "name": "Terengganu",
+      "cities": [
+        "Kuala Terengganu", "Kemaman", "Dungun", "Marang", "Besut",
+        "Hulu Terengganu", "Setiu", "Kuala Nerus"
+      ]
+    }
+  ]
+}
