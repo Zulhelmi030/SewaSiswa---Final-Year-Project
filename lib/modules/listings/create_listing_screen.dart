@@ -25,7 +25,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   final List<File> _selectedImages = [];
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
-  int _totalSlots = 1;  // max tenants allowed
+  int _totalSlots = 1; // max tenants allowed
 
   // Geocoding result
   double? _latitude;

@@ -28,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchHotListings() async {
+    if (mounted) setState(() => _isLoadingListings = true);
     try {
       final response = await Supabase.instance.client
           .from('listings')
@@ -58,7 +59,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
+      body: RefreshIndicator(
+        onRefresh: _fetchHotListings,
+        color: AppColors.primary,
+        child: CustomScrollView(
         slivers: [
           // 1. Hero Header & Search Section
           SliverToBoxAdapter(
@@ -333,6 +337,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
+        ),
       ),
     );
   }

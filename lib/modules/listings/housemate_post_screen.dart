@@ -10,7 +10,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:go_router/go_router.dart';
 
-
 class HousematePostScreen extends StatefulWidget {
   const HousematePostScreen({super.key});
 
@@ -30,6 +29,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
   final List<File> _selectedImages = [];
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
+  bool _includeAsTenant = false; // will the poster also live in this house?
 
   // Roommate slots
   int _totalSlots = 1;
@@ -102,12 +102,31 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
       return;
     }
     try {
-      final XFile? pickedFile = await _picker.pickImage(
-        source: source,
-        imageQuality: 80,
-      );
-      if (pickedFile != null) {
-        setState(() => _selectedImages.add(File(pickedFile.path)));
+      if (source == ImageSource.gallery) {
+        // Multi-select from gallery
+        final remaining = 5 - _selectedImages.length;
+        final List<XFile> pickedFiles = await _picker.pickMultiImage(
+          imageQuality: 80,
+          limit: remaining,
+        );
+        if (pickedFiles.isNotEmpty) {
+          setState(() {
+            for (final f in pickedFiles) {
+              if (_selectedImages.length < 5) {
+                _selectedImages.add(File(f.path));
+              }
+            }
+          });
+        }
+      } else {
+        // Camera — single shot
+        final XFile? pickedFile = await _picker.pickImage(
+          source: source,
+          imageQuality: 80,
+        );
+        if (pickedFile != null) {
+          setState(() => _selectedImages.add(File(pickedFile.path)));
+        }
       }
     } catch (e) {
       debugPrint('Error picking image: $e');
@@ -190,6 +209,9 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
       final user = _client.auth.currentUser;
       if (user == null) throw Exception('Not logged in');
 
+      // Anyone who posts a listing becomes a landlord
+      await _ensureLandlordRole();
+
       // Geocode the address
       await _geocodeAddress();
 
@@ -241,6 +263,16 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
         await _client.from('listing_photos').insert(photoRows);
       }
 
+      // Only add the creator as a tenant if they chose to live there
+      if (_includeAsTenant) {
+        await _client.from('rental_tenants').insert({
+          'listing_id': listingId,
+          'user_id': user.id,
+          'status': 'active',
+          'joined_at': DateTime.now().toIso8601String(),
+        });
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -261,6 +293,25 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
+  Future<void> _ensureLandlordRole() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+    final response = await Supabase.instance.client
+        .from('users')
+        .select('global_role')
+        .eq('id', user.id);
+    final role = response.first['global_role'] as String?;
+    // Promote to landlord if not already — posting a listing = landlord
+    if (role != 'landlord') {
+      await Supabase.instance.client
+          .from('users')
+          .update({'global_role': 'landlord'})
+          .eq('id', user.id);
+    }
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -503,7 +554,60 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
           _buildSectionHeader('Facilities', Icons.dashboard_rounded),
           const SizedBox(height: 16),
           _buildFacilitiesSelector(),
+
+          const SizedBox(height: 24),
+          const Divider(color: AppColors.surfaceVariant),
+          const SizedBox(height: 24),
+
+          // ── Tenancy Inclusion ───────────────────────────────────────────────
+          _buildSectionHeader('Your Tenancy', Icons.person_pin_circle_rounded),
+          const SizedBox(height: 12),
+          _buildIncludeAsTenantToggle(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildIncludeAsTenantToggle() {
+    return Container(
+      decoration: BoxDecoration(
+        color: _includeAsTenant
+            ? AppColors.primary.withValues(alpha: 0.08)
+            : AppColors.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: _includeAsTenant
+              ? AppColors.primary.withValues(alpha: 0.4)
+              : AppColors.outlineVariant,
+          width: 1.5,
+        ),
+      ),
+      child: CheckboxListTile(
+        value: _includeAsTenant,
+        onChanged: (val) => setState(() => _includeAsTenant = val ?? false),
+        activeColor: AppColors.primary,
+        checkboxShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(6),
+        ),
+        title: Text(
+          'Include me as a tenant',
+          style: AppTextStyles.bodyMedium.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        subtitle: Text(
+          _includeAsTenant
+              ? 'You will be listed as a tenant living in this house'
+              : 'You are the house owner — you will not be listed as a tenant',
+          style: AppTextStyles.bodySmall.copyWith(
+            color: _includeAsTenant
+                ? AppColors.primary
+                : AppColors.textSecondary,
+          ),
+        ),
+        controlAffinity: ListTileControlAffinity.leading,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
     );
   }

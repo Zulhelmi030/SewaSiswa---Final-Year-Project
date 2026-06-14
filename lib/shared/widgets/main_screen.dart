@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_colors.dart';
-import 'post_type_sheet.dart';
 
 class MainScreen extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
@@ -70,13 +69,18 @@ class _MainScreenState extends State<MainScreen> {
         scale: _isBottomBarVisible ? 1.0 : 0.0,
         child: FloatingActionButton(
           heroTag: 'main_nav_fab',
-          onPressed: () {
+          onPressed: () async {
             final user = Supabase.instance.client.auth.currentUser;
             if (user == null) {
               context.push('/login');
               return;
             }
-            showPostTypeSheet(context);
+            await context.push('/housemate-post');
+            // After returning from housemate post screen, go back to home
+            // branch so the listing list refreshes automatically
+            if (mounted) {
+              widget.navigationShell.goBranch(0, initialLocation: true);
+            }
           },
           backgroundColor: AppColors.primary,
           shape: const CircleBorder(),

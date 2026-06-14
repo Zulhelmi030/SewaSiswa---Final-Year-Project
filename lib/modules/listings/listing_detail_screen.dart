@@ -173,7 +173,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                         currentListing.ownerId,
                       ),
                       const SizedBox(height: 40),
-                      _buildLocationMap(currentListing.fullAddress),
+                      _buildLocationMap(currentListing),
                       const SizedBox(height: 40),
                     ],
                   ),
@@ -359,30 +359,98 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppColors.primaryFixed,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.school,
-                size: 18,
-                color: AppColors.onPrimaryFixed,
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            // UTeM Distance Badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.primaryFixed,
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: 8),
-              Text(
-                "0.8 km from UTeM Main Campus", // In a real app, calculate this
-                style: AppTextStyles.labelMedium.copyWith(
-                  color: AppColors.onPrimaryFixed,
-                  fontWeight: FontWeight.w600,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.school,
+                    size: 18,
+                    color: AppColors.onPrimaryFixed,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    "0.8 km from UTeM Main Campus", // In a real app, calculate this
+                    style: AppTextStyles.labelMedium.copyWith(
+                      color: AppColors.onPrimaryFixed,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Post Type Badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: listing.postType == 'housemate' 
+                    ? Colors.orange.withValues(alpha: 0.15)
+                    : Colors.teal.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    listing.postType == 'housemate' ? Icons.group : Icons.home,
+                    size: 18,
+                    color: listing.postType == 'housemate' ? Colors.orange.shade800 : Colors.teal.shade800,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    listing.postType == 'housemate' ? 'Housemate Wanted' : 'Full Property',
+                    style: AppTextStyles.labelMedium.copyWith(
+                      color: listing.postType == 'housemate' ? Colors.orange.shade800 : Colors.teal.shade800,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Available Slots Badge (only for housemate)
+            if (listing.postType == 'housemate' && listing.availableSlots != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: listing.availableSlots! > 0 
+                      ? Colors.green.withValues(alpha: 0.15)
+                      : Colors.red.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      listing.availableSlots! > 0 ? Icons.check_circle : Icons.cancel,
+                      size: 18,
+                      color: listing.availableSlots! > 0 ? Colors.green.shade700 : Colors.red.shade700,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      listing.availableSlots! > 0 
+                          ? '${listing.availableSlots} slots left (of ${listing.totalSlots})'
+                          : 'Fully Occupied',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: listing.availableSlots! > 0 ? Colors.green.shade800 : Colors.red.shade800,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+          ],
         ),
       ],
     );
@@ -606,7 +674,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     );
   }
 
-  Widget _buildLocationMap(String address) {
+  Widget _buildLocationMap(ListingModel listing) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -659,7 +727,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
           children: [
             Expanded(
               child: Text(
-                address,
+                listing.fullAddress,
                 style: AppTextStyles.bodyMedium.copyWith(
                   fontWeight: FontWeight.w500,
                 ),
@@ -667,6 +735,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             ),
             Container(
               height: 200,
+              width: 140, // Needs bounded width in Row
               clipBehavior: Clip.hardEdge,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
@@ -675,8 +744,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               child: FlutterMap(
                 options: MapOptions(
                   initialCenter: LatLng(
-                    widget.listing!.latitude,
-                    widget.listing!.longitude,
+                    listing.latitude,
+                    listing.longitude,
                   ),
                   initialZoom: 15.0, // Adjust zoom level to your liking
                   interactionOptions: const InteractionOptions(
@@ -695,8 +764,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                     markers: [
                       Marker(
                         point: LatLng(
-                          widget.listing!.latitude,
-                          widget.listing!.longitude,
+                          listing.latitude,
+                          listing.longitude,
                         ),
                         width: 40,
                         height: 40,
@@ -741,19 +810,23 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "RM ${listing.monthlyRent.toStringAsFixed(2)} / Month",
-                          style: AppTextStyles.titleLarge.copyWith(
-                            fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "RM ${listing.monthlyRent.toStringAsFixed(2)} / Month",
+                            style: AppTextStyles.titleMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   ElevatedButton.icon(
@@ -774,8 +847,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                       backgroundColor: AppColors.primaryContainer,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 20,
+                        horizontal: 16,
+                        vertical: 16,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(100),
@@ -784,7 +857,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                     ),
                     icon: const Icon(Icons.chat, size: 20),
                     label: Text(
-                      "Contact Owner",
+                      listing.postType == 'housemate' ? "Contact Advertiser" : "Contact Landlord",
                       style: AppTextStyles.labelMedium.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,

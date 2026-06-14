@@ -125,12 +125,31 @@ class _EditListingScreenState extends State<EditListingScreen> {
       return;
     }
     try {
-      final XFile? pickedFile = await _picker.pickImage(
-        source: source,
-        imageQuality: 80,
-      );
-      if (pickedFile != null) {
-        setState(() => _newImages.add(File(pickedFile.path)));
+      if (source == ImageSource.gallery) {
+        final remaining = _maxImages - total;
+        final List<XFile> pickedFiles = await _picker.pickMultiImage(
+          imageQuality: 80,
+          limit: remaining,
+        );
+        if (pickedFiles.isNotEmpty) {
+          setState(() {
+            for (final f in pickedFiles) {
+              final currentTotal = _existingPhotoUrls.length + _newImages.length;
+              if (currentTotal < _maxImages) {
+                _newImages.add(File(f.path));
+              }
+            }
+          });
+        }
+      } else {
+        // Camera — single shot
+        final XFile? pickedFile = await _picker.pickImage(
+          source: source,
+          imageQuality: 80,
+        );
+        if (pickedFile != null) {
+          setState(() => _newImages.add(File(pickedFile.path)));
+        }
       }
     } catch (e) {
       debugPrint('Error picking image: $e');

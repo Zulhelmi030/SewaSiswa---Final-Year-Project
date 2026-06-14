@@ -71,8 +71,18 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
   String _monthName(int month) {
     const months = [
       '',
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return months[month];
   }
@@ -94,7 +104,11 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.person_off_outlined, size: 64, color: AppColors.outlineVariant),
+              const Icon(
+                Icons.person_off_outlined,
+                size: 64,
+                color: AppColors.outlineVariant,
+              ),
               const SizedBox(height: 16),
               Text('Profile not found', style: AppTextStyles.titleMedium),
             ],
@@ -234,7 +248,10 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                   // Active Listings section
                   if (_listings.isNotEmpty) ...[
                     const SizedBox(height: 32),
-                    Text('Active Listings', style: AppTextStyles.headlineMedium),
+                    Text(
+                      'Active Listings',
+                      style: AppTextStyles.headlineMedium,
+                    ),
                     const SizedBox(height: 16),
                     ..._listings.map((l) => _buildListingTile(l)),
                   ],
@@ -294,12 +311,16 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
           children: [
             Text(
               label,
-              style: AppTextStyles.labelSmall.copyWith(color: AppColors.textSecondary),
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 2),
             Text(
               value,
-              style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -320,7 +341,9 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: AppColors.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
       child: Row(
         children: [
@@ -337,7 +360,10 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                     width: 72,
                     height: 72,
                     color: AppColors.surfaceVariant,
-                    child: const Icon(Icons.home_rounded, color: AppColors.outlineVariant),
+                    child: const Icon(
+                      Icons.home_rounded,
+                      color: AppColors.outlineVariant,
+                    ),
                   ),
           ),
           const SizedBox(width: 12),
@@ -347,14 +373,18 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
               children: [
                 Text(
                   title,
-                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '$city, $state',
-                  style: AppTextStyles.labelSmall.copyWith(color: AppColors.textSecondary),
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(

@@ -5,6 +5,7 @@ import '../../shared/widgets/listing_card.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/services/filter_by_dist_service.dart';
+import '../../core/services/filter_by_price_service.dart';
 import 'package:go_router/go_router.dart';
 import '../../shared/widgets/skeletons.dart';
 
@@ -83,6 +84,11 @@ class _ListingListScreenState extends State<ListingListScreen> {
           listing.address.toLowerCase().contains(_searchQuery.toLowerCase());
       return matchesSearch;
     }).toList();
+
+    if (_selectedFilterIndex == 1) {
+      result = FilterByPriceService.filterByPrice(result, 1000, 2000);
+      result = FilterByPriceService.sortListingByPrice(result);
+    }
 
     // Apply distance filter when the Distance chip is active
     if (_selectedFilterIndex == 3 && _distanceFilterActive) {
@@ -195,8 +201,9 @@ class _ListingListScreenState extends State<ListingListScreen> {
                   SliderTheme(
                     data: SliderTheme.of(context).copyWith(
                       activeTrackColor: AppColors.primary,
-                      inactiveTrackColor:
-                          AppColors.primary.withValues(alpha: 0.15),
+                      inactiveTrackColor: AppColors.primary.withValues(
+                        alpha: 0.15,
+                      ),
                       thumbColor: AppColors.primary,
                       overlayColor: AppColors.primary.withValues(alpha: 0.1),
                       trackHeight: 6,
@@ -273,7 +280,8 @@ class _ListingListScreenState extends State<ListingListScreen> {
                             setState(() {
                               _maxDistanceKm = tempDistance;
                               _distanceFilterActive = true;
-                              _selectedFilterIndex = 3; // keep Distance selected
+                              _selectedFilterIndex =
+                                  3; // keep Distance selected
                             });
                             Navigator.pop(context);
                           },
@@ -514,8 +522,11 @@ class _ListingListScreenState extends State<ListingListScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
+        child: RefreshIndicator(
+          onRefresh: _fetchListings,
+          color: AppColors.primary,
+          child: CustomScrollView(
+            slivers: [
             // ── Header ──────────────────────────────────────────────────────
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
@@ -728,8 +739,9 @@ class _ListingListScreenState extends State<ListingListScreen> {
               const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
           ],
-        ),
-      ),
+        ),   // CustomScrollView
+      ),     // RefreshIndicator
+    ),       // SafeArea
     );
   }
 
@@ -884,6 +896,7 @@ class _FilterChip extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
+
   /// Optional small badge text shown below the label (e.g. "≤ 3.0 km")
   final String? badge;
 
@@ -924,20 +937,19 @@ class _FilterChip extends StatelessWidget {
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
-            if (badge != null) ...
-              [
-                const SizedBox(height: 1),
-                Text(
-                  badge!,
-                  style: AppTextStyles.labelMedium.copyWith(
-                    fontSize: 9,
-                    color: isSelected
-                        ? Colors.white.withValues(alpha: 0.85)
-                        : AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
+            if (badge != null) ...[
+              const SizedBox(height: 1),
+              Text(
+                badge!,
+                style: AppTextStyles.labelMedium.copyWith(
+                  fontSize: 9,
+                  color: isSelected
+                      ? Colors.white.withValues(alpha: 0.85)
+                      : AppColors.primary,
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
+              ),
+            ],
           ],
         ),
       ),

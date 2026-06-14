@@ -29,7 +29,9 @@ class _MapScreenState extends State<MapScreen> {
     try {
       final response = await _client
           .from('listings')
-          .select('id, latitude, longitude, title, monthly_rent')
+          .select(
+            'id, owner_id, title, description, address, latitude, longitude, monthly_rent, post_type',
+          )
           .eq('status', 'available');
       setState(() {
         _listings = (response as List)
@@ -156,28 +158,30 @@ class _MapScreenState extends State<MapScreen> {
       markers.add(
         Marker(
           point: LatLng(listing.latitude, listing.longitude),
-          width: 80,
+          width: 40,
           height: 40,
           child: GestureDetector(
             onTap: () => setState(() => _selectedListing = listing),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: _selectedListing?.id == listing.id
                     ? AppColors.primary
                     : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                shape: BoxShape.circle,
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
+                ],
               ),
-              child: Text(
-                'RM${listing.monthlyRent.toStringAsFixed(0)}',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: _selectedListing?.id == listing.id
-                      ? Colors.white
-                      : AppColors.primary,
-                ),
+              child: Icon(
+                Icons.home_rounded,
+                size: 22,
+                color: _selectedListing?.id == listing.id
+                    ? Colors.white
+                    : AppColors.primary,
               ),
             ),
           ),

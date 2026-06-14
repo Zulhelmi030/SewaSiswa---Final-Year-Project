@@ -22,14 +22,16 @@ class _AccountScreenState extends State<AccountScreen> {
     _loadUser();
   }
 
-  void _loadUser() {
+  Future<void> _loadUser() async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null && user.email != null) {
       final email = user.email!;
-      setState(() {
-        _email = email;
-        _displayName = email.split('@').first;
-      });
+      if (mounted) {
+        setState(() {
+          _email = email;
+          _displayName = email.split('@').first;
+        });
+      }
     }
   }
 
@@ -64,8 +66,11 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
+      body: RefreshIndicator(
+        onRefresh: _loadUser,
+        color: AppColors.primary,
+        child: SafeArea(
+          child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,7 +142,8 @@ class _AccountScreenState extends State<AccountScreen> {
             ],
           ),
         ),
-      ),
+      ),   // SafeArea
+    ),     // RefreshIndicator
     );
   }
 

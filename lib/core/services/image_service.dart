@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class ImageService {
   final SupabaseClient _supabaseClient;
@@ -9,19 +10,40 @@ class ImageService {
 
   ImageService(this._supabaseClient);
 
+  //Compress image
+  //lossless compression
+  Future<Uint8List?> compressImage(File imageFile) async {
+    final result = await FlutterImageCompress.compressWithFile(
+      imageFile.absolute.path,
+      format: CompressFormat.webp,
+      quality: 80, //best compression ratio
+      minWidth: 1920, //max width of image
+      minHeight: 1080, //max height of image
+    );
+    return result;
+  }
+
   /// Uploads a single image to Supabase Storage and returns its public URL.
   /// Returns null if the upload fails.
   Future<String?> uploadListingImage(File imageFile) async {
     try {
       // Use milliseconds + random suffix to avoid filename collisions
       final random = Random().nextInt(999999).toString().padLeft(6, '0');
-      final ext = imageFile.path.split('.').last;
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_$random.$ext';
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_$random.webp';
       final filePath = 'listings/$fileName';
+      final compressedImage = await compressImage(imageFile);
+      if (compressedImage == null) {
+        debugPrint('Error compressing image');
+        return null;
+      }
 
       await _supabaseClient.storage
           .from(_bucketName)
-          .upload(filePath, imageFile);
+          .uploadBinary(
+            filePath,
+            compressedImage,
+            fileOptions: const FileOptions(contentType: 'image/webp'),
+          );
 
       final publicUrl = _supabaseClient.storage
           .from(_bucketName)
@@ -30,6 +52,46 @@ class ImageService {
       return publicUrl;
     } catch (e) {
       debugPrint('Error uploading image: $e');
+      return null;
+    }
+  }
+
+  /// Uploads a payment receipt to the dedicated 'receipts' bucket
+  /// Supports both Images (compressed to webp) and PDFs (uploaded directly)
+  Future<String?> uploadReceiptImage(File file) async {
+    try {
+      final random = Random().nextInt(999999).toString().padLeft(6, '0');
+      final ext = file.path.split('.').last.toLowerCase();
+
+      String fileName;
+      Uint8List bytesToUpload;
+      String contentType;
+
+      if (ext == 'pdf') {
+        fileName =
+            'receipt_${DateTime.now().millisecondsSinceEpoch}_$random.pdf';
+        bytesToUpload = await file.readAsBytes();
+        contentType = 'application/pdf';
+      } else {
+        fileName =
+            'receipt_${DateTime.now().millisecondsSinceEpoch}_$random.webp';
+        final compressedImage = await compressImage(file);
+        if (compressedImage == null) return null;
+        bytesToUpload = compressedImage;
+        contentType = 'image/webp';
+      }
+
+      await _supabaseClient.storage
+          .from('receipts')
+          .uploadBinary(
+            fileName,
+            bytesToUpload,
+            fileOptions: FileOptions(contentType: contentType),
+          );
+
+      return _supabaseClient.storage.from('receipts').getPublicUrl(fileName);
+    } catch (e) {
+      debugPrint('Error uploading receipt: $e');
       return null;
     }
   }

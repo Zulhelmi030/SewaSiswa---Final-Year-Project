@@ -16,7 +16,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _phoneController = TextEditingController();
-  String _selectedRole = 'student';
   bool _isLoading = false;
 
   @override
@@ -52,7 +51,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         'full_name': _fullNameController.text.trim(),
         'email': user.email ?? '',
         'phone': _phoneController.text.trim(),
-        'role': _selectedRole,
+        'role': 'guest', // all users start as guest; role is updated by actions
         'rating_average': 0.0,
         'created_at': DateTime.now().toIso8601String(),
       });
@@ -157,54 +156,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       }
                       return null;
                     },
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Role dropdown
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Register as',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedRole,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: AppColors.surface,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'student',
-                            child: Text('Student'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'house_owner',
-                            child: Text('House Owner'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'general_tenant',
-                            child: Text('General Tenant'),
-                          ),
-                        ],
-                        onChanged: (value) =>
-                            setState(() => _selectedRole = value!),
-                      ),
-                    ],
                   ),
                   const SizedBox(height: 32),
 

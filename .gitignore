@@ -19,7 +19,7 @@ migrate_working_dir/
 .idea/
 
 # VS Code (uncomment if you don't want to track VS Code settings)
-#.vscode/
+.vscode/
 
 # Flutter/Dart/Pub related
 **/doc/api/

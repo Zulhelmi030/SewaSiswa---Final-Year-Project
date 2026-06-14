@@ -56,6 +56,7 @@ class ListingModel {
   });
 
   factory ListingModel.fromJson(Map<String, dynamic> json) {
+    print("Raw JSON received 1: $json");
     final photos = json['listing_photos'];
     // Extract all photo URLs from joined listing_photos if present
     List<String> imageUrlsList = [];
@@ -65,13 +66,14 @@ class ListingModel {
           .whereType<String>()
           .toList();
     }
-
+    print("Raw JSON received 2: $json");
     // Parse facilities array from Postgres TEXT[]
     List<String>? facilitiesList;
     final rawFacilities = json['facilities'];
     if (rawFacilities != null && rawFacilities is List) {
       facilitiesList = List<String>.from(rawFacilities);
     }
+    print("Raw JSON received 3: $json");
 
     return ListingModel(
       id: json['id'] as String,
@@ -80,24 +82,34 @@ class ListingModel {
       description: json['description'] as String,
       address: json['address'] as String,
       latitude: json['latitude'] != null
-          ? (json['latitude'] as num).toDouble()
+          ? (json['latitude'] is String
+                ? double.tryParse(json['latitude']) ?? 0.0
+                : (json['latitude'] as num).toDouble())
           : 0.0,
       longitude: json['longitude'] != null
-          ? (json['longitude'] as num).toDouble()
+          ? (json['longitude'] is String
+                ? double.tryParse(json['longitude']) ?? 0.0
+                : (json['longitude'] as num).toDouble())
           : 0.0,
       city: json['city'] as String?,
       postcode: json['postcode'] as String?,
       state: json['state'] as String?,
-      monthlyRent: (json['monthly_rent'] as num).toDouble(),
+      monthlyRent: json['monthly_rent'] is String
+          ? double.tryParse(json['monthly_rent']) ?? 0.0
+          : (json['monthly_rent'] as num).toDouble(),
       deposit: json['deposit'] != null
-          ? (json['deposit'] as num).toDouble()
+          ? (json['deposit'] is String
+                ? double.tryParse(json['deposit'])
+                : (json['deposit'] as num).toDouble())
           : null,
       houseRule: json['house_rule'] as String?,
       genderPreference: json['gender_preference'] as String?,
       facilities: facilitiesList,
       status: json['status'] as String?,
       rating: json['rating'] != null
-          ? (json['rating'] as num).toDouble()
+          ? (json['rating'] is String
+                ? double.tryParse(json['rating'])
+                : (json['rating'] as num).toDouble())
           : null,
       reviewCount: json['review_count'] as int?,
       postType: json['post_type'] as String? ?? 'property',
