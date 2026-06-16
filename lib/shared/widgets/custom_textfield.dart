@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 
 class CustomTextField extends StatefulWidget {
   final String label;
@@ -54,8 +53,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
           padding: const EdgeInsets.only(left: 4.0),
           child: Text(
             widget.label,
-            style: AppTextStyles.labelMedium.copyWith(
-              color: AppColors.primary,
+            style: context.appTextStyles.labelMedium.copyWith(
+              color: context.appColors.primary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -64,19 +63,19 @@ class _CustomTextFieldState extends State<CustomTextField> {
         AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
-            color: _isFocused ? AppColors.surfaceContainerLowest : AppColors.surfaceContainerLow,
+            color: _isFocused ? context.appColors.surfaceContainerLowest : context.appColors.surfaceContainerLow,
             borderRadius: BorderRadius.circular(16),
             boxShadow: _isFocused
                 ? [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.08),
+                      color: context.appColors.primary.withValues(alpha: 0.08),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     )
                   ]
                 : [],
             border: Border.all(
-              color: _isFocused ? AppColors.primary.withValues(alpha: 0.2) : Colors.transparent,
+              color: _isFocused ? context.appColors.primary.withValues(alpha: 0.2) : Colors.transparent,
               width: 1.5,
             ),
           ),
@@ -86,10 +85,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
             obscureText: widget.isPassword ? _obscureText : false,
             keyboardType: widget.keyboardType,
             validator: widget.validator,
-            style: AppTextStyles.bodyMedium,
+            style: context.appTextStyles.bodyMedium,
             decoration: InputDecoration(
               hintText: widget.hintText,
-              hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.outline),
+              hintStyle: context.appTextStyles.bodyMedium.copyWith(color: context.appColors.outline),
               filled: false, // Handled by AnimatedContainer
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
@@ -103,7 +102,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                   ? IconButton(
                       icon: Icon(
                         _obscureText ? Icons.visibility_off : Icons.visibility,
-                        color: AppColors.outline,
+                        color: context.appColors.outline,
                         size: 20,
                       ),
                       onPressed: () {

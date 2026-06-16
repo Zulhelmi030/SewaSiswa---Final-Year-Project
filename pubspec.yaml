@@ -49,6 +49,7 @@ dependencies:
   flutter_map: ^8.3.0
   latlong2: ^0.9.1
   file_picker: ^11.0.2
+  timeago: ^3.7.1
 
 
 

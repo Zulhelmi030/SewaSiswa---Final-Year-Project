@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/listing_model.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
 import '../../core/services/listing_service.dart';
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 
 class ManageListingScreen extends StatefulWidget {
   const ManageListingScreen({super.key});
@@ -56,7 +55,9 @@ class _ManageListingScreenState extends State<ManageListingScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            style: TextButton.styleFrom(
+              foregroundColor: context.appColors.error,
+            ),
             child: const Text('Delete'),
           ),
         ],
@@ -85,7 +86,7 @@ class _ManageListingScreenState extends State<ManageListingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error deleting listing: $e'),
-            backgroundColor: AppColors.error,
+            backgroundColor: context.appColors.error,
           ),
         );
       }
@@ -95,23 +96,25 @@ class _ManageListingScreenState extends State<ManageListingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.appColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.appColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back, color: context.appColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
           'Manage Listings',
-          style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.bold),
+          style: context.appTextStyles.titleLarge.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.add_circle_outline,
-              color: AppColors.primary,
+              color: context.appColors.primary,
             ),
             tooltip: 'Add new listing',
             onPressed: () async {
@@ -135,9 +138,12 @@ class _ManageListingScreenState extends State<ManageListingScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+            Icon(Icons.error_outline, size: 48, color: context.appColors.error),
             const SizedBox(height: 16),
-            Text('Failed to load listings', style: AppTextStyles.titleMedium),
+            Text(
+              'Failed to load listings',
+              style: context.appTextStyles.titleMedium,
+            ),
             const SizedBox(height: 8),
             TextButton(onPressed: _fetchMyListings, child: const Text('Retry')),
           ],
@@ -150,22 +156,24 @@ class _ManageListingScreenState extends State<ManageListingScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.home_work_outlined,
               size: 64,
-              color: AppColors.outlineVariant,
+              color: context.appColors.outlineVariant,
             ),
             const SizedBox(height: 16),
             Text(
               'No listings yet',
-              style: AppTextStyles.titleMedium.copyWith(
-                color: AppColors.onSurfaceVariant,
+              style: context.appTextStyles.titleMedium.copyWith(
+                color: context.appColors.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Tap + to create your first listing',
-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.outline),
+              style: context.appTextStyles.bodySmall.copyWith(
+                color: context.appColors.outline,
+              ),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -176,7 +184,7 @@ class _ManageListingScreenState extends State<ManageListingScreen> {
               icon: const Icon(Icons.add),
               label: const Text('Create Listing'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: context.appColors.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(100),
@@ -208,13 +216,13 @@ class _ManageListingScreenState extends State<ManageListingScreen> {
     final statusColor = listing.status == 'available'
         ? Colors.green
         : listing.status == 'rented'
-        ? AppColors.secondary
-        : AppColors.outline;
+        ? context.appColors.secondary
+        : context.appColors.outline;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.appColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -230,9 +238,9 @@ class _ManageListingScreenState extends State<ManageListingScreen> {
           // Photo
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            child: listing.imageUrl != null
+            child: listing.imageUrls.isNotEmpty
                 ? Image.network(
-                    listing.imageUrl!,
+                    listing.imageUrls[0],
                     height: 160,
                     width: double.infinity,
                     fit: BoxFit.cover,
@@ -252,7 +260,7 @@ class _ManageListingScreenState extends State<ManageListingScreen> {
                     Expanded(
                       child: Text(
                         listing.title,
-                        style: AppTextStyles.titleMedium.copyWith(
+                        style: context.appTextStyles.titleMedium.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                         maxLines: 1,
@@ -271,7 +279,7 @@ class _ManageListingScreenState extends State<ManageListingScreen> {
                       ),
                       child: Text(
                         listing.status?.toUpperCase() ?? 'UNKNOWN',
-                        style: AppTextStyles.labelCaps.copyWith(
+                        style: context.appTextStyles.labelCaps.copyWith(
                           color: statusColor,
                           fontSize: 10,
                         ),
@@ -282,17 +290,17 @@ class _ManageListingScreenState extends State<ManageListingScreen> {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.location_on_outlined,
                       size: 14,
-                      color: AppColors.onSurfaceVariant,
+                      color: context.appColors.onSurfaceVariant,
                     ),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         listing.fullAddress,
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.onSurfaceVariant,
+                        style: context.appTextStyles.bodySmall.copyWith(
+                          color: context.appColors.onSurfaceVariant,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -303,55 +311,82 @@ class _ManageListingScreenState extends State<ManageListingScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'RM ${listing.monthlyRent.toStringAsFixed(0)} / month',
-                  style: AppTextStyles.titleMedium.copyWith(
-                    color: AppColors.primary,
+                  style: context.appTextStyles.titleMedium.copyWith(
+                    color: context.appColors.primary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 16),
                 // Action buttons
-                Row(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          await context.push(
-                            '/home/listings/edit',
-                            extra: listing,
-                          );
-                          _fetchMyListings();
-                        },
-                        icon: const Icon(Icons.edit_outlined, size: 18),
-                        label: const Text('Edit'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.primary,
-                          side: const BorderSide(
-                            color: AppColors.outlineVariant,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => context.push(
+                        '/manage-members',
+                        extra: listing,
+                      ),
+                      icon: const Icon(Icons.people_outline, size: 18),
+                      label: const Text('Manage Members & Requests'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: context.appColors.primary,
+                        side: BorderSide(
+                          color: context.appColors.primary.withValues(alpha: 0.4),
                         ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        backgroundColor: context.appColors.primaryFixed.withValues(alpha: 0.1),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _deleteListing(listing),
-                        icon: const Icon(Icons.delete_outline, size: 18),
-                        label: const Text('Delete'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.error,
-                          side: BorderSide(
-                            color: AppColors.error.withValues(alpha: 0.4),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () async {
+                              await context.push(
+                                '/home/listings/edit',
+                                extra: listing,
+                              );
+                              _fetchMyListings();
+                            },
+                            icon: const Icon(Icons.edit_outlined, size: 18),
+                            label: const Text('Edit'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: context.appColors.primary,
+                              side: BorderSide(
+                                color: context.appColors.outlineVariant,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                      ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _deleteListing(listing),
+                            icon: const Icon(Icons.delete_outline, size: 18),
+                            label: const Text('Delete'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: context.appColors.error,
+                              side: BorderSide(
+                                color: context.appColors.error.withValues(
+                                  alpha: 0.4,
+                                ),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -367,11 +402,11 @@ class _ManageListingScreenState extends State<ManageListingScreen> {
     return Container(
       height: 160,
       width: double.infinity,
-      color: AppColors.surfaceContainer,
-      child: const Icon(
+      color: context.appColors.surfaceContainer,
+      child: Icon(
         Icons.image_outlined,
         size: 48,
-        color: AppColors.outlineVariant,
+        color: context.appColors.outlineVariant,
       ),
     );
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 
 /// A shimmer placeholder shaped like a listing card used in the vertical list.
 class ListingCardSkeleton extends StatelessWidget {
@@ -13,7 +13,7 @@ class ListingCardSkeleton extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 24),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
+          color: context.appColors.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(24),
         ),
         child: Column(
@@ -26,7 +26,7 @@ class ListingCardSkeleton extends StatelessWidget {
               child: Container(
                 height: 200,
                 width: double.infinity,
-                color: AppColors.surfaceContainerHigh,
+                color: context.appColors.surfaceContainerHigh,
               ),
             ),
             Padding(
@@ -77,7 +77,7 @@ class HorizontalListingCardSkeleton extends StatelessWidget {
         width: 280,
         margin: const EdgeInsets.only(right: 16),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
+          color: context.appColors.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(24),
         ),
         child: Column(
@@ -90,7 +90,7 @@ class HorizontalListingCardSkeleton extends StatelessWidget {
               child: Container(
                 height: 200,
                 width: double.infinity,
-                color: AppColors.surfaceContainerHigh,
+                color: context.appColors.surfaceContainerHigh,
               ),
             ),
             Padding(
@@ -124,7 +124,7 @@ class LandlordCardSkeleton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
+          color: context.appColors.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(24),
         ),
         child: Row(
@@ -164,7 +164,7 @@ class ManageListingCardSkeleton extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
+          color: context.appColors.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -177,7 +177,7 @@ class ManageListingCardSkeleton extends StatelessWidget {
               child: Container(
                 height: 160,
                 width: double.infinity,
-                color: AppColors.surfaceContainerHigh,
+                color: context.appColors.surfaceContainerHigh,
               ),
             ),
             Padding(

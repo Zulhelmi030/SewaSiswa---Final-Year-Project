@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 
 class UserAvatar extends StatelessWidget {
   final String? imageUrl;
@@ -17,7 +17,7 @@ class UserAvatar extends StatelessWidget {
       width: radius * 2,
       height: radius * 2,
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: context.appColors.surfaceContainerLow,
         shape: BoxShape.circle,
         image: imageUrl != null
             ? DecorationImage(
@@ -29,7 +29,7 @@ class UserAvatar extends StatelessWidget {
       child: imageUrl == null
           ? Icon(
               Icons.person_outline_rounded,
-              color: AppColors.outline,
+              color: context.appColors.outline,
               size: radius,
             )
           : null,

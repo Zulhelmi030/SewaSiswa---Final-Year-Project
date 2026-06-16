@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:finalyearproject/core/constants/app_colors.dart';
 import 'package:finalyearproject/core/services/image_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 
 class CreateListingScreen extends StatefulWidget {
   const CreateListingScreen({super.key});
@@ -118,7 +118,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   void _showImageSourceDialog() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surfaceContainerLowest,
+      backgroundColor: context.appColors.surfaceContainerLowest,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -194,16 +194,16 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.appColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.appColors.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.onBackground),
-        title: const Text(
+        iconTheme: IconThemeData(color: context.appColors.onSurface),
+        title: Text(
           "Create New Listing",
           style: TextStyle(
             fontFamily: 'Manrope',
-            color: AppColors.onBackground,
+            color: context.appColors.onSurface,
             fontWeight: FontWeight.w600,
             fontSize: 20,
           ),
@@ -225,26 +225,26 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
 
   Widget _buildPhotoUploadSection() {
     return Container(
-      color: AppColors.surfaceContainerLowest,
+      color: context.appColors.surfaceContainerLowest,
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             "Property Photos",
             style: TextStyle(
               fontFamily: 'Manrope',
               fontWeight: FontWeight.w600,
               fontSize: 18,
-              color: AppColors.textPrimary,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             "Add high-quality photos of your property. First photo will be the cover.",
             style: TextStyle(
               fontFamily: 'Inter',
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
               fontSize: 14,
             ),
           ),
@@ -281,24 +281,24 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         width: 120,
         height: 120,
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerHigh,
+          color: context.appColors.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: AppColors.outlineVariant,
+            color: context.appColors.outlineVariant,
             width: 1,
             style: BorderStyle.solid,
           ),
         ),
-        child: const Column(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_a_photo, color: AppColors.primary, size: 32),
+            Icon(Icons.add_a_photo, color: context.appColors.primary, size: 32),
             SizedBox(height: 8),
             Text(
               "Add Photo",
               style: TextStyle(
                 fontFamily: 'Inter',
-                color: AppColors.primary,
+                color: context.appColors.primary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -331,7 +331,11 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                 color: Colors.white70,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.close, size: 20, color: AppColors.error),
+              child: Icon(
+                Icons.close,
+                size: 20,
+                color: context.appColors.error,
+              ),
             ),
           ),
         ),
@@ -341,18 +345,18 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
 
   Widget _buildFormSection() {
     return Container(
-      color: AppColors.surfaceContainerLowest,
+      color: context.appColors.surfaceContainerLowest,
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             "Property Details",
             style: TextStyle(
               fontFamily: 'Manrope',
               fontWeight: FontWeight.w600,
               fontSize: 18,
-              color: AppColors.textPrimary,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 24),
@@ -391,15 +395,15 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
             ],
           ),
           const SizedBox(height: 24),
-          const Divider(color: AppColors.surfaceVariant),
+          Divider(color: context.appColors.surfaceVariant),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             "Pricing",
             style: TextStyle(
               fontFamily: 'Manrope',
               fontWeight: FontWeight.w600,
               fontSize: 18,
-              color: AppColors.textPrimary,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -427,29 +431,29 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
             ],
           ),
           const SizedBox(height: 24),
-          const Divider(color: AppColors.surfaceVariant),
+          Divider(color: context.appColors.surfaceVariant),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'Availability',
             style: TextStyle(
               fontFamily: 'Manrope',
               fontWeight: FontWeight.w600,
               fontSize: 18,
-              color: AppColors.textPrimary,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
           _buildTenantCapacityStepper(),
           const SizedBox(height: 24),
-          const Divider(color: AppColors.surfaceVariant),
+          Divider(color: context.appColors.surfaceVariant),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             "Preferences & Rules",
             style: TextStyle(
               fontFamily: 'Manrope',
               fontWeight: FontWeight.w600,
               fontSize: 18,
-              color: AppColors.textPrimary,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -462,15 +466,15 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
             controller: _rulesController,
           ),
           const SizedBox(height: 24),
-          const Divider(color: AppColors.surfaceVariant),
+          Divider(color: context.appColors.surfaceVariant),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             "Facilities",
             style: TextStyle(
               fontFamily: 'Manrope',
               fontWeight: FontWeight.w600,
               fontSize: 18,
-              color: AppColors.textPrimary,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -483,7 +487,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   Widget _buildTenantCapacityStepper() {
     return Row(
       children: [
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -493,7 +497,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
                   fontSize: 14,
-                  color: AppColors.textPrimary,
+                  color: context.appColors.textPrimary,
                 ),
               ),
               SizedBox(height: 2),
@@ -502,7 +506,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 12,
-                  color: AppColors.textSecondary,
+                  color: context.appColors.textSecondary,
                 ),
               ),
             ],
@@ -520,11 +524,11 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
               child: Text(
                 '$_totalSlots',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Manrope',
                   fontWeight: FontWeight.w700,
                   fontSize: 18,
-                  color: AppColors.textPrimary,
+                  color: context.appColors.textPrimary,
                 ),
               ),
             ),
@@ -552,14 +556,14 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         height: 36,
         decoration: BoxDecoration(
           color: enabled
-              ? AppColors.primary
-              : AppColors.outline.withValues(alpha: 0.2),
+              ? context.appColors.primary
+              : context.appColors.outline.withValues(alpha: 0.2),
           shape: BoxShape.circle,
         ),
         child: Icon(
           icon,
           size: 18,
-          color: enabled ? Colors.white : AppColors.outline,
+          color: enabled ? Colors.white : context.appColors.outline,
         ),
       ),
     );
@@ -578,11 +582,11 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Inter',
             fontWeight: FontWeight.w500,
             fontSize: 14,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
@@ -593,12 +597,12 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
           decoration: InputDecoration(
             hintText: placeholder,
             prefixText: prefixText,
-            hintStyle: const TextStyle(
-              color: AppColors.outline,
+            hintStyle: TextStyle(
+              color: context.appColors.outline,
               fontFamily: 'Inter',
             ),
             filled: true,
-            fillColor: AppColors.surfaceContainerHigh,
+            fillColor: context.appColors.surfaceContainerHigh,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14,
@@ -609,7 +613,10 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              borderSide: BorderSide(
+                color: context.appColors.primary,
+                width: 2,
+              ),
             ),
           ),
         ),
@@ -621,21 +628,24 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'State',
           style: TextStyle(
             fontFamily: 'Inter',
             fontWeight: FontWeight.w500,
             fontSize: 14,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           initialValue: _selectedState,
-          hint: const Text(
+          hint: Text(
             'Select a state',
-            style: TextStyle(color: AppColors.outline, fontFamily: 'Inter'),
+            style: TextStyle(
+              color: context.appColors.outline,
+              fontFamily: 'Inter',
+            ),
           ),
           items: _stateCityMap.keys
               .map(
@@ -643,9 +653,9 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                   value: state,
                   child: Text(
                     state,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Inter',
-                      color: AppColors.textPrimary,
+                      color: context.appColors.textPrimary,
                     ),
                   ),
                 ),
@@ -659,7 +669,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
           },
           decoration: InputDecoration(
             filled: true,
-            fillColor: AppColors.surfaceContainerHigh,
+            fillColor: context.appColors.surfaceContainerHigh,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14,
@@ -670,14 +680,17 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              borderSide: BorderSide(
+                color: context.appColors.primary,
+                width: 2,
+              ),
             ),
           ),
-          dropdownColor: AppColors.surfaceContainerLowest,
+          dropdownColor: context.appColors.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(12),
-          icon: const Icon(
+          icon: Icon(
             Icons.keyboard_arrow_down_rounded,
-            color: AppColors.textSecondary,
+            color: context.appColors.textSecondary,
           ),
         ),
       ],
@@ -691,13 +704,13 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'City',
           style: TextStyle(
             fontFamily: 'Inter',
             fontWeight: FontWeight.w500,
             fontSize: 14,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
@@ -706,8 +719,8 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
           initialValue: _selectedCity,
           hint: Text(
             _selectedState == null ? 'Select state first' : 'Select a city',
-            style: const TextStyle(
-              color: AppColors.outline,
+            style: TextStyle(
+              color: context.appColors.outline,
               fontFamily: 'Inter',
             ),
           ),
@@ -717,9 +730,9 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                   value: city,
                   child: Text(
                     city,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Inter',
-                      color: AppColors.textPrimary,
+                      color: context.appColors.textPrimary,
                     ),
                   ),
                 ),
@@ -735,8 +748,8 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
           decoration: InputDecoration(
             filled: true,
             fillColor: cities.isEmpty
-                ? AppColors.surfaceContainerHigh.withValues(alpha: 0.5)
-                : AppColors.surfaceContainerHigh,
+                ? context.appColors.surfaceContainerHigh.withValues(alpha: 0.5)
+                : context.appColors.surfaceContainerHigh,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14,
@@ -747,14 +760,17 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              borderSide: BorderSide(
+                color: context.appColors.primary,
+                width: 2,
+              ),
             ),
           ),
-          dropdownColor: AppColors.surfaceContainerLowest,
+          dropdownColor: context.appColors.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(12),
-          icon: const Icon(
+          icon: Icon(
             Icons.keyboard_arrow_down_rounded,
-            color: AppColors.textSecondary,
+            color: context.appColors.textSecondary,
           ),
         ),
       ],
@@ -765,13 +781,13 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           "Gender Preference",
           style: TextStyle(
             fontFamily: 'Inter',
             fontWeight: FontWeight.w500,
             fontSize: 14,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
@@ -789,15 +805,15 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
           style: ButtonStyle(
             backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
               if (states.contains(WidgetState.selected)) {
-                return AppColors.primaryContainer;
+                return context.appColors.primary;
               }
-              return AppColors.surfaceContainerHigh;
+              return context.appColors.surfaceContainerHigh;
             }),
             foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
               if (states.contains(WidgetState.selected)) {
-                return AppColors.onPrimary;
+                return context.appColors.onPrimary;
               }
-              return AppColors.textPrimary;
+              return context.appColors.textPrimary;
             }),
           ),
         ),
@@ -817,8 +833,8 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
             style: TextStyle(
               fontFamily: 'Inter',
               color: isSelected
-                  ? AppColors.onPrimaryFixed
-                  : AppColors.textSecondary,
+                  ? context.appColors.onPrimaryFixed
+                  : context.appColors.textSecondary,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
             ),
           ),
@@ -832,9 +848,9 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
               }
             });
           },
-          backgroundColor: AppColors.surfaceContainerHigh,
-          selectedColor: AppColors.primaryFixed,
-          checkmarkColor: AppColors.onPrimaryFixed,
+          backgroundColor: context.appColors.surfaceContainerHigh,
+          selectedColor: context.appColors.primaryFixed,
+          checkmarkColor: context.appColors.onPrimaryFixed,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
             side: BorderSide.none,
@@ -945,13 +961,13 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
 
   Widget _buildBottomBar() {
     return Container(
-      color: AppColors.surfaceContainerLowest,
+      color: context.appColors.surfaceContainerLowest,
       padding: const EdgeInsets.only(left: 24, right: 24, bottom: 32, top: 16),
       child: Container(
         width: double.infinity,
         height: 56,
         decoration: BoxDecoration(
-          gradient: AppColors.primaryGradient,
+          gradient: context.appColors.primaryGradient,
           borderRadius: BorderRadius.circular(28),
         ),
         child: ElevatedButton(
@@ -964,21 +980,21 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
             ),
           ),
           child: _isLoading
-              ? const SizedBox(
+              ? SizedBox(
                   width: 24,
                   height: 24,
                   child: CircularProgressIndicator(
-                    color: AppColors.onPrimary,
+                    color: context.appColors.onPrimary,
                     strokeWidth: 2.5,
                   ),
                 )
-              : const Text(
+              : Text(
                   "Create Listing",
                   style: TextStyle(
                     fontFamily: 'Manrope',
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.onPrimary,
+                    color: context.appColors.onPrimary,
                   ),
                 ),
         ),

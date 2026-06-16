@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 
 /// A real-time chat screen backed by Supabase Realtime (WebSocket).
 ///
@@ -191,9 +190,9 @@ class _ChatScreenState extends State<ChatScreen> {
           _messages.removeWhere((m) => m['_optimistic'] == true);
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('Failed to send message. Please try again.'),
-            backgroundColor: AppColors.error,
+            backgroundColor: context.appColors.error,
           ),
         );
       }
@@ -257,7 +256,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.appColors.background,
       appBar: _buildAppBar(),
       body: Column(
         children: [
@@ -273,7 +272,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: AppColors.primary,
+      backgroundColor: context.appColors.primary,
       foregroundColor: Colors.white,
       elevation: 0,
       titleSpacing: 0,
@@ -286,13 +285,13 @@ class _ChatScreenState extends State<ChatScreen> {
           // Avatar
           CircleAvatar(
             radius: 18,
-            backgroundColor: AppColors.primaryFixed,
+            backgroundColor: context.appColors.primaryFixed,
             child: Text(
               widget.receiverName.isNotEmpty
                   ? widget.receiverName[0].toUpperCase()
                   : '?',
-              style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.primary,
+              style: context.appTextStyles.labelMedium.copyWith(
+                color: context.appColors.primary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -303,7 +302,7 @@ class _ChatScreenState extends State<ChatScreen> {
             children: [
               Text(
                 widget.receiverName,
-                style: AppTextStyles.titleMedium.copyWith(
+                style: context.appTextStyles.titleMedium.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
@@ -314,15 +313,15 @@ class _ChatScreenState extends State<ChatScreen> {
                   Container(
                     width: 6,
                     height: 6,
-                    decoration: const BoxDecoration(
-                      color: AppColors.success,
+                    decoration: BoxDecoration(
+                      color: context.appColors.success,
                       shape: BoxShape.circle,
                     ),
                   ),
                   const SizedBox(width: 4),
                   Text(
                     'Connected',
-                    style: AppTextStyles.bodySmall.copyWith(
+                    style: context.appTextStyles.bodySmall.copyWith(
                       color: Colors.white.withValues(alpha: 0.7),
                       fontSize: 11,
                     ),
@@ -343,22 +342,22 @@ class _ChatScreenState extends State<ChatScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.primaryFixed,
+        color: context.appColors.primaryFixed,
         border: Border(
           bottom: BorderSide(
-            color: AppColors.outlineVariant.withValues(alpha: 0.3),
+            color: context.appColors.outlineVariant.withValues(alpha: 0.3),
           ),
         ),
       ),
       child: Row(
         children: [
-          const Icon(Icons.home_outlined, size: 16, color: AppColors.primary),
+          Icon(Icons.home_outlined, size: 16, color: context.appColors.primary),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               'Re: ${widget.listingTitle}',
-              style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.primary,
+              style: context.appTextStyles.labelMedium.copyWith(
+                color: context.appColors.primary,
                 fontWeight: FontWeight.w600,
               ),
               maxLines: 1,
@@ -385,19 +384,19 @@ class _ChatScreenState extends State<ChatScreen> {
             Icon(
               Icons.chat_bubble_outline_rounded,
               size: 56,
-              color: AppColors.outlineVariant,
+              color: context.appColors.outlineVariant,
             ),
             const SizedBox(height: 16),
             Text(
               'No messages yet',
-              style: AppTextStyles.titleMedium.copyWith(
-                color: AppColors.textSecondary,
+              style: context.appTextStyles.titleMedium.copyWith(
+                color: context.appColors.textSecondary,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               'Say hello to ${widget.receiverName}!',
-              style: AppTextStyles.bodySmall,
+              style: context.appTextStyles.bodySmall,
             ),
           ],
         ),
@@ -458,18 +457,18 @@ class _ChatScreenState extends State<ChatScreen> {
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
         children: [
-          const Expanded(child: Divider(color: AppColors.outlineVariant)),
+          Expanded(child: Divider(color: context.appColors.outlineVariant)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
               label,
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.outline,
+              style: context.appTextStyles.bodySmall.copyWith(
+                color: context.appColors.outline,
                 fontSize: 11,
               ),
             ),
           ),
-          const Expanded(child: Divider(color: AppColors.outlineVariant)),
+          Expanded(child: Divider(color: context.appColors.outlineVariant)),
         ],
       ),
     );
@@ -499,8 +498,8 @@ class _ChatScreenState extends State<ChatScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
             color: isMine
-                ? AppColors.primary
-                : AppColors.surfaceContainerLowest,
+                ? context.appColors.primary
+                : context.appColors.surfaceContainerLowest,
             borderRadius: BorderRadius.only(
               topLeft: const Radius.circular(20),
               topRight: const Radius.circular(20),
@@ -523,8 +522,8 @@ class _ChatScreenState extends State<ChatScreen> {
               // Message text
               Text(
                 content,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: isMine ? Colors.white : AppColors.textPrimary,
+                style: context.appTextStyles.bodyMedium.copyWith(
+                  color: isMine ? Colors.white : context.appColors.textPrimary,
                   height: 1.4,
                 ),
               ),
@@ -535,11 +534,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   Text(
                     time,
-                    style: AppTextStyles.bodySmall.copyWith(
+                    style: context.appTextStyles.bodySmall.copyWith(
                       fontSize: 10,
                       color: isMine
                           ? Colors.white.withValues(alpha: 0.65)
-                          : AppColors.outline,
+                          : context.appColors.outline,
                     ),
                   ),
                   if (isMine) ...[
@@ -551,10 +550,10 @@ class _ChatScreenState extends State<ChatScreen> {
                         color: Colors.white.withValues(alpha: 0.65),
                       )
                     else if (isRead)
-                      const Icon(
+                      Icon(
                         Icons.done_all,
                         size: 12,
-                        color: AppColors.success,
+                        color: context.appColors.success,
                       )
                     else
                       Icon(
@@ -577,7 +576,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildInputBar() {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.appColors.surfaceContainerLowest,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
@@ -600,20 +599,20 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLow,
+                color: context.appColors.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: AppColors.outlineVariant),
+                border: Border.all(color: context.appColors.outlineVariant),
               ),
               child: TextField(
                 controller: _messageController,
                 maxLines: 4,
                 minLines: 1,
                 textCapitalization: TextCapitalization.sentences,
-                style: AppTextStyles.bodyMedium,
+                style: context.appTextStyles.bodyMedium,
                 decoration: InputDecoration(
                   hintText: 'Message ${widget.receiverName}…',
-                  hintStyle: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.outline,
+                  hintStyle: context.appTextStyles.bodyMedium.copyWith(
+                    color: context.appColors.outline,
                   ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
@@ -632,11 +631,11 @@ class _ChatScreenState extends State<ChatScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
+              gradient: context.appColors.primaryGradient,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.3),
+                  color: context.appColors.primary.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),

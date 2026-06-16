@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/user_avatar.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
+import 'package:go_router/go_router.dart';
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -15,6 +14,7 @@ class AccountScreen extends StatefulWidget {
 class _AccountScreenState extends State<AccountScreen> {
   String _email = '';
   String _displayName = '';
+  String? _avatarUrl;
 
   @override
   void initState() {
@@ -23,14 +23,41 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _loadUser() async {
-    final user = Supabase.instance.client.auth.currentUser;
+    final client = Supabase.instance.client;
+    final user = client.auth.currentUser;
     if (user != null && user.email != null) {
       final email = user.email!;
-      if (mounted) {
-        setState(() {
-          _email = email;
-          _displayName = email.split('@').first;
-        });
+      try {
+        // Fetch the avatar URL from our public.users table
+        final userData = await client
+            .from('users')
+            .select('avatar_url')
+            .eq('id', user.id)
+            .single();
+        if (mounted) {
+          setState(() {
+            _email = email;
+            if (user.userMetadata?['full_name'] != null) {
+              _displayName = user.userMetadata!['full_name'] as String;
+            } else {
+              _displayName = email.split('@').first;
+            }
+            _avatarUrl = userData['avatar_url'] as String?;
+          });
+        }
+      } catch (e) {
+        debugPrint('AccountScreen _loadUser Error: $e');
+        // Fallback if the database fetch fails
+        if (mounted) {
+          setState(() {
+            _email = email;
+            if (user.userMetadata?['full_name'] != null) {
+              _displayName = user.userMetadata!['full_name'] as String;
+            } else {
+              _displayName = email.split('@').first;
+            }
+          });
+        }
       }
     }
   }
@@ -65,120 +92,144 @@ class _AccountScreenState extends State<AccountScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: RefreshIndicator(
-        onRefresh: _loadUser,
-        color: AppColors.primary,
-        child: SafeArea(
-          child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 60),
-              // Profile Header
-              Center(
-                child: Column(
-                  children: [
-                    const UserAvatar(radius: 60),
-                    const SizedBox(height: 24),
-                    Text(_displayName, style: AppTextStyles.headlineLarge),
-                    const SizedBox(height: 4),
-                    Text(
-                      _email,
-                      style: AppTextStyles.labelMedium.copyWith(
-                        color: AppColors.outline,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 48),
-
-              // Menu Sections
-              Text(
-                "PREFERENCES",
-                style: AppTextStyles.labelMedium.copyWith(
-                  letterSpacing: 2,
-                  color: AppColors.primary.withValues(alpha: 0.4),
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildMenuItem(
-                Icons.person_outline_rounded,
-                "Personal Information",
-              ),
-              _buildMenuItem(Icons.notifications_none_rounded, "Notifications"),
-              _buildMenuItem(Icons.security_rounded, "Security & Privacy"),
-
-              const SizedBox(height: 32),
-              Text(
-                "HOSTING",
-                style: AppTextStyles.labelMedium.copyWith(
-                  letterSpacing: 2,
-                  color: AppColors.primary.withValues(alpha: 0.4),
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildMenuItem(Icons.home_work_outlined, "Manage Listings"),
-              _buildMenuItem(Icons.analytics_outlined, "Earnings Report"),
-
-              const SizedBox(height: 48),
-              CustomButton(text: "Edit Profile", onPressed: () {}),
-              const SizedBox(height: 16),
-              Center(
-                child: TextButton(
-                  onPressed: _handleLogout,
-                  child: Text(
-                    "Logout",
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: AppColors.error,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
-      ),   // SafeArea
-    ),     // RefreshIndicator
-    );
-  }
-
-  Widget _buildMenuItem(IconData icon, String title) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
+      appBar: AppBar(
+        backgroundColor: context.appColors.background, // keeps it blending in
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout_rounded, color: context.appColors.error),
+            onPressed: _handleLogout,
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Icon(icon, size: 22, color: AppColors.primary),
-          const SizedBox(width: 16),
-          Text(
-            title,
-            style: AppTextStyles.bodyMedium.copyWith(
-              fontWeight: FontWeight.w500,
+      backgroundColor: context.appColors.background,
+      body: RefreshIndicator(
+        onRefresh: _loadUser,
+        color: context.appColors.primary,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 60),
+                // Profile Header
+                Center(
+                  child: Column(
+                    children: [
+                      UserAvatar(imageUrl: _avatarUrl, radius: 60),
+                      const SizedBox(height: 24),
+                      Text(_displayName, style: context.appTextStyles.headlineLarge),
+                      const SizedBox(height: 4),
+                      Text(
+                        _email,
+                        style: context.appTextStyles.labelMedium.copyWith(
+                          color: context.appColors.outline,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 48),
+
+                // Menu Sections
+                Text(
+                  "PREFERENCES",
+                  style: context.appTextStyles.labelMedium.copyWith(
+                    letterSpacing: 2,
+                    color: context.appColors.primary.withValues(alpha: 0.4),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildMenuItem(
+                  Icons.person_outline_rounded,
+                  "Personal Information",
+                  onTap: () async {
+                    await context.push('/personal-info');
+                    _loadUser(); // Refresh data when we come back!
+                  },
+                ),
+
+                _buildMenuItem(
+                  Icons.notifications_none_rounded,
+                  "Notifications",
+                  onTap: () => context.push('/notifications'),
+                ),
+                _buildMenuItem(
+                  Icons.security_rounded,
+                  "Security & Privacy",
+                  onTap: () => context.push('/security'),
+                ),
+
+                const SizedBox(height: 32),
+                Text(
+                  "HOSTING",
+                  style: context.appTextStyles.labelMedium.copyWith(
+                    letterSpacing: 2,
+                    color: context.appColors.primary.withValues(alpha: 0.4),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildMenuItem(
+                  Icons.home_work_outlined,
+                  "Manage Listings",
+                  onTap: () => context.push('/manage-listings'),
+                ),
+                _buildMenuItem(
+                  Icons.analytics_outlined,
+                  "Earnings Report",
+                  onTap: () => context.push('/earnings-report'),
+                ),
+
+                const SizedBox(height: 40),
+              ],
             ),
           ),
-          const Spacer(),
-          const Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 14,
-            color: AppColors.outlineVariant,
+        ), // SafeArea
+      ), // RefreshIndicator
+    );
+  }
+
+  Widget _buildMenuItem(IconData icon, String title, {VoidCallback? onTap}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(
+          20,
+        ), // keeps the ripple inside the rounded corners
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: context.appColors.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
+          child: Row(
+            children: [
+              Icon(icon, size: 22, color: context.appColors.primary),
+              const SizedBox(width: 16),
+              Text(
+                title,
+                style: context.appTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: context.appColors.outlineVariant,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

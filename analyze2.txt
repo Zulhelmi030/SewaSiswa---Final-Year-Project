@@ -1,0 +1,43 @@
+Analyzing finalyearproject...                                   
+
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/modules/account_nav/account_screen.dart:4:8 • unused_import
+warning • Unused import: '../../core/constants/app_text_styles.dart' • lib/modules/account_nav/account_screen.dart:5:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/modules/account_nav/manage_listing_screen.dart:5:8 • unused_import
+warning • Unused import: '../../core/constants/app_text_styles.dart' • lib/modules/account_nav/manage_listing_screen.dart:6:8 • unused_import
+warning • Unused import: 'package:finalyearproject/core/constants/app_colors.dart' • lib/modules/account_nav/personal_info_screen.dart:6:8 • unused_import
+warning • Unused import: 'package:finalyearproject/core/constants/app_text_styles.dart' • lib/modules/account_nav/personal_info_screen.dart:7:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/modules/auth/complete_profile_screen.dart:4:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/modules/auth/forgot_password_screen.dart:4:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/modules/auth/login_screen.dart:6:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/modules/auth/register_screen.dart:4:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/modules/auth/update_password_screen.dart:5:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/modules/chat/chat_inbox_screen.dart:4:8 • unused_import
+warning • Unused import: '../../core/constants/app_text_styles.dart' • lib/modules/chat/chat_inbox_screen.dart:5:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/modules/chat/chat_screen.dart:3:8 • unused_import
+warning • Unused import: '../../core/constants/app_text_styles.dart' • lib/modules/chat/chat_screen.dart:4:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/modules/home/home_screen.dart:4:8 • unused_import
+warning • Unused import: '../../core/constants/app_text_styles.dart' • lib/modules/home/home_screen.dart:5:8 • unused_import
+warning • Unused import: 'package:finalyearproject/core/constants/app_colors.dart' • lib/modules/listings/create_listing_screen.dart:6:8 • unused_import
+warning • Unused import: 'package:finalyearproject/core/constants/app_colors.dart' • lib/modules/listings/edit_listing_screen.dart:9:8 • unused_import
+warning • Unused import: 'package:finalyearproject/core/constants/app_colors.dart' • lib/modules/listings/housemate_post_screen.dart:6:8 • unused_import
+warning • Unused import: 'package:finalyearproject/core/constants/app_text_styles.dart' • lib/modules/listings/housemate_post_screen.dart:7:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/modules/listings/listing_detail_screen.dart:6:8 • unused_import
+warning • Unused import: '../../core/constants/app_text_styles.dart' • lib/modules/listings/listing_detail_screen.dart:7:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/modules/listings/listing_list_screen.dart:5:8 • unused_import
+warning • Unused import: '../../core/constants/app_text_styles.dart' • lib/modules/listings/listing_list_screen.dart:6:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/modules/listings/owner_list_profile_screen.dart:4:8 • unused_import
+warning • Unused import: '../../core/constants/app_text_styles.dart' • lib/modules/listings/owner_list_profile_screen.dart:5:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/modules/map/map_screen.dart:6:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/modules/payment/payment_screen.dart:7:8 • unused_import
+warning • Unused import: '../../core/constants/app_text_styles.dart' • lib/modules/payment/payment_screen.dart:8:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/shared/widgets/custom_button.dart:2:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/shared/widgets/custom_textfield.dart:2:8 • unused_import
+warning • Unused import: '../../core/constants/app_text_styles.dart' • lib/shared/widgets/custom_textfield.dart:3:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/shared/widgets/listing_card.dart:5:8 • unused_import
+warning • Unused import: '../../core/constants/app_text_styles.dart' • lib/shared/widgets/listing_card.dart:6:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/shared/widgets/main_screen.dart:5:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/shared/widgets/post_type_sheet.dart:2:8 • unused_import
+warning • Unused import: '../../core/constants/app_text_styles.dart' • lib/shared/widgets/post_type_sheet.dart:3:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/shared/widgets/skeletons.dart:3:8 • unused_import
+warning • Unused import: '../../core/constants/app_colors.dart' • lib/shared/widgets/user_avatar.dart:2:8 • unused_import
+

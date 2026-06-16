@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
 import '../../routes/app_routes.dart';
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 
 class ChatInboxScreen extends StatefulWidget {
   const ChatInboxScreen({super.key});
@@ -167,12 +166,12 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.appColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.surfaceContainerLowest,
+        backgroundColor: context.appColors.surfaceContainerLowest,
         title: Text(
           "Messages",
-          style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.bold),
+          style: context.appTextStyles.titleLarge.copyWith(fontWeight: FontWeight.bold),
         ),
         centerTitle: false,
         elevation: 0,
@@ -193,19 +192,19 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.chat_bubble_outline,
-                size: 64, color: AppColors.outlineVariant),
+                size: 64, color: context.appColors.outlineVariant),
             const SizedBox(height: 16),
             Text(
               "No messages yet",
-              style: AppTextStyles.titleMedium.copyWith(
-                  color: AppColors.textSecondary, fontWeight: FontWeight.bold),
+              style: context.appTextStyles.titleMedium.copyWith(
+                  color: context.appColors.textSecondary, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
               "When you contact owners, your chats\nwill appear here.",
               textAlign: TextAlign.center,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.outline,
+              style: context.appTextStyles.bodyMedium.copyWith(
+                color: context.appColors.outline,
               ),
             ),
           ],
@@ -215,12 +214,12 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
 
     return RefreshIndicator(
       onRefresh: _fetchInboxData,
-      color: AppColors.primary,
+      color: context.appColors.primary,
       child: ListView.separated(
         itemCount: _conversations.length,
-        separatorBuilder: (context, index) => const Divider(
+        separatorBuilder: (context, index) => Divider(
           height: 1,
-          color: AppColors.surfaceContainerHigh,
+          color: context.appColors.surfaceContainerHigh,
           indent: 72,
         ),
         itemBuilder: (context, index) {
@@ -248,13 +247,13 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                   // Avatar
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: AppColors.primaryFixed,
+                    backgroundColor: context.appColors.primaryFixed,
                     child: Text(
                       (convo['other_user_name'] as String)
                           .substring(0, 1)
                           .toUpperCase(),
-                      style: AppTextStyles.titleMedium.copyWith(
-                        color: AppColors.primary,
+                      style: context.appTextStyles.titleMedium.copyWith(
+                        color: context.appColors.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -271,7 +270,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                             Expanded(
                               child: Text(
                                 convo['other_user_name'],
-                                style: AppTextStyles.titleMedium.copyWith(
+                                style: context.appTextStyles.titleMedium.copyWith(
                                   fontWeight: hasUnread
                                       ? FontWeight.bold
                                       : FontWeight.w600,
@@ -282,10 +281,10 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                             ),
                             Text(
                               _formatTime(convo['sent_at']),
-                              style: AppTextStyles.labelMedium.copyWith(
+                              style: context.appTextStyles.labelMedium.copyWith(
                                 color: hasUnread
-                                    ? AppColors.primary
-                                    : AppColors.outline,
+                                    ? context.appColors.primary
+                                    : context.appColors.outline,
                                 fontWeight: hasUnread
                                     ? FontWeight.bold
                                     : FontWeight.normal,
@@ -299,10 +298,10 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                             Expanded(
                               child: Text(
                                 convo['latest_message'],
-                                style: AppTextStyles.bodyMedium.copyWith(
+                                style: context.appTextStyles.bodyMedium.copyWith(
                                   color: hasUnread
-                                      ? AppColors.textPrimary
-                                      : AppColors.textSecondary,
+                                      ? context.appColors.textPrimary
+                                      : context.appColors.textSecondary,
                                   fontWeight: hasUnread
                                       ? FontWeight.bold
                                       : FontWeight.normal,
@@ -315,8 +314,8 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                               const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.all(6),
-                                decoration: const BoxDecoration(
-                                  color: AppColors.primary,
+                                decoration: BoxDecoration(
+                                  color: context.appColors.primary,
                                   shape: BoxShape.circle,
                                 ),
                                 child: Text(

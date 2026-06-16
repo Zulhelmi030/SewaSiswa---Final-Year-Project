@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 
 class OwnerProfileScreen extends StatefulWidget {
   final String ownerId;
@@ -90,27 +89,27 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
+      return Scaffold(
+        backgroundColor: context.appColors.background,
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_profile == null) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.appColors.background,
         appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.person_off_outlined,
                 size: 64,
-                color: AppColors.outlineVariant,
+                color: context.appColors.outlineVariant,
               ),
               const SizedBox(height: 16),
-              Text('Profile not found', style: AppTextStyles.titleMedium),
+              Text('Profile not found', style: context.appTextStyles.titleMedium),
             ],
           ),
         ),
@@ -122,14 +121,14 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
     final phone = _profile!['phone_number'] as String?;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.appColors.background,
       body: CustomScrollView(
         slivers: [
           // ── Hero Header ──────────────────────────────────────────────────
           SliverAppBar(
             expandedHeight: 280,
             pinned: true,
-            backgroundColor: AppColors.primary,
+            backgroundColor: context.appColors.primary,
             leading: GestureDetector(
               onTap: () => context.pop(),
               child: Container(
@@ -143,8 +142,8 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration: const BoxDecoration(
-                  gradient: AppColors.primaryGradient,
+                decoration: BoxDecoration(
+                  gradient: context.appColors.primaryGradient,
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -155,7 +154,7 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                       width: 96,
                       height: 96,
                       decoration: BoxDecoration(
-                        color: AppColors.secondaryContainer,
+                        color: context.appColors.secondaryContainer,
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 3),
                       ),
@@ -212,7 +211,7 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                         _buildBadge(
                           Icons.verified_rounded,
                           role == 'landlord' ? 'Landlord' : 'Tenant',
-                          AppColors.primary,
+                          context.appColors.primary,
                         ),
                     ],
                   ),
@@ -222,10 +221,10 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
+                      color: context.appColors.surfaceContainerLowest,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: AppColors.outlineVariant.withValues(alpha: 0.5),
+                        color: context.appColors.outlineVariant.withValues(alpha: 0.5),
                       ),
                     ),
                     child: Column(
@@ -236,8 +235,8 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                           Center(
                             child: Text(
                               'No additional information available.',
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.textSecondary,
+                              style: context.appTextStyles.bodySmall.copyWith(
+                                color: context.appColors.textSecondary,
                               ),
                             ),
                           ),
@@ -250,7 +249,7 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                     const SizedBox(height: 32),
                     Text(
                       'Active Listings',
-                      style: AppTextStyles.headlineMedium,
+                      style: context.appTextStyles.headlineMedium,
                     ),
                     const SizedBox(height: 16),
                     ..._listings.map((l) => _buildListingTile(l)),
@@ -300,10 +299,10 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.08),
+            color: context.appColors.primary.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, size: 18, color: AppColors.primary),
+          child: Icon(icon, size: 18, color: context.appColors.primary),
         ),
         const SizedBox(width: 16),
         Column(
@@ -311,14 +310,14 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
           children: [
             Text(
               label,
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textSecondary,
+              style: context.appTextStyles.labelSmall.copyWith(
+                color: context.appColors.textSecondary,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               value,
-              style: AppTextStyles.bodyMedium.copyWith(
+              style: context.appTextStyles.bodyMedium.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -339,10 +338,10 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.appColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.5),
+          color: context.appColors.outlineVariant.withValues(alpha: 0.5),
         ),
       ),
       child: Row(
@@ -359,10 +358,10 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                 : Container(
                     width: 72,
                     height: 72,
-                    color: AppColors.surfaceVariant,
-                    child: const Icon(
+                    color: context.appColors.surfaceVariant,
+                    child: Icon(
                       Icons.home_rounded,
-                      color: AppColors.outlineVariant,
+                      color: context.appColors.outlineVariant,
                     ),
                   ),
           ),
@@ -373,7 +372,7 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
               children: [
                 Text(
                   title,
-                  style: AppTextStyles.bodyMedium.copyWith(
+                  style: context.appTextStyles.bodyMedium.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                   maxLines: 1,
@@ -382,15 +381,15 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                 const SizedBox(height: 4),
                 Text(
                   '$city, $state',
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textSecondary,
+                  style: context.appTextStyles.labelSmall.copyWith(
+                    color: context.appColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   'RM $rent / mo',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.primary,
+                  style: context.appTextStyles.labelMedium.copyWith(
+                    color: context.appColors.primary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:ui';
 import '../../models/listing_model.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 
 class ListingCard extends StatelessWidget {
   final ListingModel listing;
@@ -25,11 +24,15 @@ class ListingCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
+          color: context.appColors.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: context.appColors.glassOutline,
+            width: 1.0,
+          ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.onSurface.withValues(alpha: 0.04),
+              color: context.appColors.primary.withValues(alpha: 0.12),
               blurRadius: 32,
               offset: const Offset(0, 12),
             ),
@@ -44,24 +47,31 @@ class ListingCard extends StatelessWidget {
               children: [
                 AspectRatio(
                   aspectRatio: 1.2,
-                  child: listing.imageUrl != null
+                  child: listing.imageUrls.isNotEmpty
                       ? CachedNetworkImage(
-                          imageUrl: listing.imageUrl!,
+                          imageUrl: listing.imageUrls[0],
                           fit: BoxFit.cover,
                           placeholder: (context, url) => Container(
-                            color: AppColors.surfaceContainerLow,
+                            color: context.appColors.surfaceContainerLow,
                             child: const Center(
                               child: CircularProgressIndicator(strokeWidth: 2),
                             ),
                           ),
                           errorWidget: (context, url, error) => Container(
-                            color: AppColors.surfaceContainerLow,
-                            child: const Icon(Icons.broken_image_outlined, color: AppColors.outline),
+                            color: context.appColors.surfaceContainerLow,
+                            child: Icon(
+                              Icons.broken_image_outlined,
+                              color: context.appColors.outline,
+                            ),
                           ),
                         )
                       : Container(
-                          color: AppColors.surfaceContainerLow,
-                          child: const Icon(Icons.image_outlined, color: AppColors.outline, size: 48),
+                          color: context.appColors.surfaceContainerLow,
+                          child: Icon(
+                            Icons.image_outlined,
+                            color: context.appColors.outline,
+                            size: 48,
+                          ),
                         ),
                 ),
                 // Price Tag - Glassmorphism style
@@ -73,12 +83,15 @@ class ListingCard extends StatelessWidget {
                     child: BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         color: Colors.white.withValues(alpha: 0.85),
                         child: Text(
                           "RM ${listing.monthlyRent.toStringAsFixed(0)}/mo",
-                          style: AppTextStyles.labelMedium.copyWith(
-                            color: AppColors.primary,
+                          style: context.appTextStyles.labelMedium.copyWith(
+                            color: context.appColors.primary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -111,16 +124,14 @@ class ListingCard extends StatelessWidget {
                       ),
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 200),
-                        transitionBuilder: (child, animation) => ScaleTransition(
-                          scale: animation,
-                          child: child,
-                        ),
+                        transitionBuilder: (child, animation) =>
+                            ScaleTransition(scale: animation, child: child),
                         child: Icon(
                           isWishlisted
                               ? Icons.favorite_rounded
                               : Icons.favorite_border_rounded,
                           key: ValueKey(isWishlisted),
-                          color: isWishlisted ? Colors.red : AppColors.outline,
+                          color: isWishlisted ? Colors.red : context.appColors.outline,
                           size: 20,
                         ),
                       ),
@@ -137,7 +148,7 @@ class ListingCard extends StatelessWidget {
                 children: [
                   Text(
                     listing.title,
-                    style: AppTextStyles.headlineMedium.copyWith(
+                    style: context.appTextStyles.headlineMedium.copyWith(
                       fontSize: 20,
                       height: 1.2,
                     ),
@@ -147,16 +158,16 @@ class ListingCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.location_on_outlined,
                         size: 14,
-                        color: AppColors.outline,
+                        color: context.appColors.outline,
                       ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           listing.address,
-                          style: AppTextStyles.labelSmall,
+                          style: context.appTextStyles.labelSmall,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -169,15 +180,15 @@ class ListingCard extends StatelessWidget {
                     children: [
                       Text(
                         "Available Now",
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.success,
+                        style: context.appTextStyles.labelSmall.copyWith(
+                          color: context.appColors.success,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const Icon(
+                      Icon(
                         Icons.arrow_forward_ios_rounded,
                         size: 14,
-                        color: AppColors.outline,
+                        color: context.appColors.outline,
                       ),
                     ],
                   ),

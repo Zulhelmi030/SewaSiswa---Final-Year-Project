@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
@@ -26,20 +26,16 @@ class CustomButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(9999),
         gradient: (isOutlined || !useGradient)
             ? null
-            : const LinearGradient(
-                colors: [AppColors.primary, AppColors.primaryContainer],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-        color: isOutlined ? Colors.transparent : (!useGradient ? AppColors.primary : null),
+            : context.appColors.primaryGradient,
+        color: isOutlined ? Colors.transparent : (!useGradient ? context.appColors.primary : null),
         border: isOutlined
-            ? Border.all(color: AppColors.primary.withValues(alpha: 0.15), width: 1.5)
+            ? Border.all(color: context.appColors.primary.withValues(alpha: 0.15), width: 1.5)
             : null,
         boxShadow: isOutlined
             ? []
             : [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.04),
+                  color: context.appColors.primary.withValues(alpha: 0.04),
                   blurRadius: 40,
                   offset: const Offset(0, 12),
                 ),
@@ -63,7 +59,7 @@ class CustomButton extends StatelessWidget {
                 : Text(
                     text,
                     style: TextStyle(
-                      color: isOutlined ? AppColors.primary : Colors.white,
+                      color: isOutlined ? context.appColors.primary : Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.5,

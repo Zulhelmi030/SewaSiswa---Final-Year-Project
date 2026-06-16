@@ -6,11 +6,16 @@ import 'package:finalyearproject/routes/app_routes.dart';
 import 'package:finalyearproject/core/services/auth_service.dart';
 import 'package:finalyearproject/core/styles/app_theme.dart';
 
+import 'package:flutter_stripe/flutter_stripe.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Load environment variables
   await dotenv.load(fileName: ".env");
+
+  // Initialize Stripe
+  Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY'] ?? '';
 
   // Initialize Supabase using env variables
   await Supabase.initialize(
@@ -31,20 +36,21 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthService()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => AuthService())],
       child: Builder(
         builder: (context) {
           final authService = Provider.of<AuthService>(context, listen: false);
-          
+
           return MaterialApp.router(
             title: 'SewaSiswa',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: ThemeMode
+                .system, // Automatically switches based on device settings
             routerConfig: AppRoutes.createRouter(authService),
           );
-        }
+        },
       ),
     );
   }

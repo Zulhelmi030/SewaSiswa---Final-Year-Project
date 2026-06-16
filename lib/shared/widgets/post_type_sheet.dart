@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
 import 'package:go_router/go_router.dart';
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 
 void showPostTypeSheet(BuildContext context) {
   showModalBottomSheet<void>(
@@ -19,7 +18,7 @@ void showPostTypeSheet(BuildContext context) {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.outlineVariant,
+              color: context.appColors.outlineVariant,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -29,7 +28,7 @@ void showPostTypeSheet(BuildContext context) {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
               'Post Type',
-              style: AppTextStyles.titleMedium.copyWith(
+              style: context.appTextStyles.titleMedium.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -52,12 +51,12 @@ void showPostTypeSheet(BuildContext context) {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
+                          color: context.appColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.home_outlined,
-                          color: AppColors.primary,
+                          color: context.appColors.primary,
                           size: 20,
                         ),
                       ),
@@ -67,20 +66,20 @@ void showPostTypeSheet(BuildContext context) {
                         children: [
                           Text(
                             'List a Property',
-                            style: AppTextStyles.titleMedium.copyWith(
+                            style: context.appTextStyles.titleMedium.copyWith(
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                           Text(
                             'Rent out your room or house',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
+                            style: context.appTextStyles.bodySmall.copyWith(
+                              color: context.appColors.textSecondary,
                             ),
                           ),
                         ],
                       ),
                       const Spacer(),
-                      const Icon(Icons.chevron_right, color: AppColors.outline),
+                      Icon(Icons.chevron_right, color: context.appColors.outline),
                     ],
                   ),
                 ),
@@ -100,12 +99,12 @@ void showPostTypeSheet(BuildContext context) {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: AppColors.secondary.withValues(alpha: 0.1),
+                          color: context.appColors.secondary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.people_outline,
-                          color: AppColors.secondary,
+                          color: context.appColors.secondary,
                           size: 20,
                         ),
                       ),
@@ -115,20 +114,20 @@ void showPostTypeSheet(BuildContext context) {
                         children: [
                           Text(
                             'Find Housemates',
-                            style: AppTextStyles.titleMedium.copyWith(
+                            style: context.appTextStyles.titleMedium.copyWith(
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                           Text(
                             'Looking for people to fill a room',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
+                            style: context.appTextStyles.bodySmall.copyWith(
+                              color: context.appColors.textSecondary,
                             ),
                           ),
                         ],
                       ),
                       const Spacer(),
-                      const Icon(Icons.chevron_right, color: AppColors.outline),
+                      Icon(Icons.chevron_right, color: context.appColors.outline),
                     ],
                   ),
                 ),

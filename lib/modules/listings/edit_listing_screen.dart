@@ -6,9 +6,9 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:finalyearproject/core/constants/app_colors.dart';
 import 'package:finalyearproject/core/services/image_service.dart';
 import '../../models/listing_model.dart';
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 
 class EditListingScreen extends StatefulWidget {
   final ListingModel listing;
@@ -159,7 +159,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
   void _showImageSourceDialog() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surfaceContainerLowest,
+      backgroundColor: context.appColors.surfaceContainerLowest,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -316,16 +316,16 @@ class _EditListingScreenState extends State<EditListingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.appColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.appColors.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.onBackground),
-        title: const Text(
+        iconTheme: IconThemeData(color: context.appColors.onSurface),
+        title: Text(
           'Edit Listing',
           style: TextStyle(
             fontFamily: 'Manrope',
-            color: AppColors.onBackground,
+            color: context.appColors.onSurface,
             fontWeight: FontWeight.w600,
             fontSize: 20,
           ),
@@ -350,18 +350,18 @@ class _EditListingScreenState extends State<EditListingScreen> {
   Widget _buildPhotoSection() {
     final total = _existingPhotoUrls.length + _newImages.length;
     return Container(
-      color: AppColors.surfaceContainerLowest,
+      color: context.appColors.surfaceContainerLowest,
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Property Photos',
             style: TextStyle(
               fontFamily: 'Manrope',
               fontWeight: FontWeight.w600,
               fontSize: 18,
-              color: AppColors.textPrimary,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -369,7 +369,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
             'Tap × on any photo to remove it. Add new photos below.',
             style: TextStyle(
               fontFamily: 'Inter',
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
               fontSize: 14,
             ),
           ),
@@ -408,20 +408,20 @@ class _EditListingScreenState extends State<EditListingScreen> {
         width: 120,
         height: 120,
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerHigh,
+          color: context.appColors.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.outlineVariant),
+          border: Border.all(color: context.appColors.outlineVariant),
         ),
-        child: const Column(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_a_photo, color: AppColors.primary, size: 32),
+            Icon(Icons.add_a_photo, color: context.appColors.primary, size: 32),
             SizedBox(height: 8),
             Text(
               'Add Photo',
               style: TextStyle(
                 fontFamily: 'Inter',
-                color: AppColors.primary,
+                color: context.appColors.primary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -444,7 +444,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
             errorBuilder: (_, _, _) => Container(
               width: 120,
               height: 120,
-              color: AppColors.surfaceContainer,
+              color: context.appColors.surfaceContainer,
               child: const Icon(Icons.broken_image),
             ),
           ),
@@ -459,7 +459,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
                 color: Colors.white70,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.close, size: 20, color: AppColors.error),
+              child: Icon(Icons.close, size: 20, color: context.appColors.error),
             ),
           ),
         ),
@@ -489,7 +489,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
                 color: Colors.white70,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.close, size: 20, color: AppColors.error),
+              child: Icon(Icons.close, size: 20, color: context.appColors.error),
             ),
           ),
         ),
@@ -501,18 +501,18 @@ class _EditListingScreenState extends State<EditListingScreen> {
 
   Widget _buildFormSection() {
     return Container(
-      color: AppColors.surfaceContainerLowest,
+      color: context.appColors.surfaceContainerLowest,
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Property Details',
             style: TextStyle(
               fontFamily: 'Manrope',
               fontWeight: FontWeight.w600,
               fontSize: 18,
-              color: AppColors.textPrimary,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 24),
@@ -551,15 +551,15 @@ class _EditListingScreenState extends State<EditListingScreen> {
             ],
           ),
           const SizedBox(height: 24),
-          const Divider(color: AppColors.surfaceVariant),
+          Divider(color: context.appColors.surfaceVariant),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'Pricing',
             style: TextStyle(
               fontFamily: 'Manrope',
               fontWeight: FontWeight.w600,
               fontSize: 18,
-              color: AppColors.textPrimary,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -587,13 +587,13 @@ class _EditListingScreenState extends State<EditListingScreen> {
             ],
           ),
           const SizedBox(height: 24),
-          const Divider(color: AppColors.surfaceVariant),
+          Divider(color: context.appColors.surfaceVariant),
           const SizedBox(height: 24),
           _buildGenderPreference(),
           const SizedBox(height: 24),
           _buildFacilities(),
           const SizedBox(height: 24),
-          const Divider(color: AppColors.surfaceVariant),
+          Divider(color: context.appColors.surfaceVariant),
           const SizedBox(height: 24),
           _buildTextField(
             label: 'House Rules',
@@ -620,11 +620,11 @@ class _EditListingScreenState extends State<EditListingScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Inter',
             fontWeight: FontWeight.w500,
             fontSize: 14,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
@@ -632,16 +632,16 @@ class _EditListingScreenState extends State<EditListingScreen> {
           controller: controller,
           maxLines: maxLines,
           keyboardType: keyboardType,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Inter',
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
           decoration: InputDecoration(
             hintText: placeholder,
             prefixText: prefixText,
-            hintStyle: const TextStyle(color: AppColors.outline),
+            hintStyle: TextStyle(color: context.appColors.outline),
             filled: true,
-            fillColor: AppColors.surfaceContainerHigh,
+            fillColor: context.appColors.surfaceContainerHigh,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14,
@@ -652,7 +652,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              borderSide: BorderSide(color: context.appColors.primary, width: 2),
             ),
           ),
         ),
@@ -665,22 +665,22 @@ class _EditListingScreenState extends State<EditListingScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'State',
           style: TextStyle(
             fontFamily: 'Inter',
             fontWeight: FontWeight.w500,
             fontSize: 14,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           isExpanded: true,
           initialValue: _selectedState,
-          hint: const Text(
+          hint: Text(
             'Select a state',
-            style: TextStyle(color: AppColors.outline, fontFamily: 'Inter'),
+            style: TextStyle(color: context.appColors.outline, fontFamily: 'Inter'),
           ),
           items: states
               .map((s) => DropdownMenuItem(value: s, child: Text(s)))
@@ -693,7 +693,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
           },
           decoration: InputDecoration(
             filled: true,
-            fillColor: AppColors.surfaceContainerHigh,
+            fillColor: context.appColors.surfaceContainerHigh,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14,
@@ -703,7 +703,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
               borderSide: BorderSide.none,
             ),
           ),
-          dropdownColor: AppColors.surfaceContainerLowest,
+          dropdownColor: context.appColors.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(12),
         ),
       ],
@@ -716,13 +716,13 @@ class _EditListingScreenState extends State<EditListingScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'City',
           style: TextStyle(
             fontFamily: 'Inter',
             fontWeight: FontWeight.w500,
             fontSize: 14,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
@@ -731,7 +731,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
           initialValue: _selectedCity,
           hint: Text(
             _selectedState == null ? 'Select state first' : 'Select a city',
-            style: const TextStyle(color: AppColors.outline, fontFamily: 'Inter'),
+            style: TextStyle(color: context.appColors.outline, fontFamily: 'Inter'),
           ),
           items: cities
               .map((city) => DropdownMenuItem<String>(value: city, child: Text(city)))
@@ -742,8 +742,8 @@ class _EditListingScreenState extends State<EditListingScreen> {
           decoration: InputDecoration(
             filled: true,
             fillColor: cities.isEmpty
-                ? AppColors.surfaceContainerHigh.withValues(alpha: 0.5)
-                : AppColors.surfaceContainerHigh,
+                ? context.appColors.surfaceContainerHigh.withValues(alpha: 0.5)
+                : context.appColors.surfaceContainerHigh,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14,
@@ -753,7 +753,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
               borderSide: BorderSide.none,
             ),
           ),
-          dropdownColor: AppColors.surfaceContainerLowest,
+          dropdownColor: context.appColors.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(12),
         ),
       ],
@@ -764,13 +764,13 @@ class _EditListingScreenState extends State<EditListingScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Gender Preference',
           style: TextStyle(
             fontFamily: 'Manrope',
             fontWeight: FontWeight.w600,
             fontSize: 18,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
         const SizedBox(height: 16),
@@ -785,17 +785,17 @@ class _EditListingScreenState extends State<EditListingScreen> {
                   style: TextStyle(
                     fontFamily: 'Inter',
                     color: isSelected
-                        ? AppColors.onPrimaryFixed
-                        : AppColors.textSecondary,
+                        ? context.appColors.onPrimaryFixed
+                        : context.appColors.textSecondary,
                     fontWeight:
                         isSelected ? FontWeight.w600 : FontWeight.w400,
                   ),
                 ),
                 selected: isSelected,
                 onSelected: (_) => setState(() => _selectedGender = g),
-                backgroundColor: AppColors.surfaceContainerHigh,
-                selectedColor: AppColors.primaryFixed,
-                checkmarkColor: AppColors.onPrimaryFixed,
+                backgroundColor: context.appColors.surfaceContainerHigh,
+                selectedColor: context.appColors.primaryFixed,
+                checkmarkColor: context.appColors.onPrimaryFixed,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                   side: BorderSide.none,
@@ -812,13 +812,13 @@ class _EditListingScreenState extends State<EditListingScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Facilities',
           style: TextStyle(
             fontFamily: 'Manrope',
             fontWeight: FontWeight.w600,
             fontSize: 18,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
         const SizedBox(height: 16),
@@ -833,8 +833,8 @@ class _EditListingScreenState extends State<EditListingScreen> {
                 style: TextStyle(
                   fontFamily: 'Inter',
                   color: isSelected
-                      ? AppColors.onPrimaryFixed
-                      : AppColors.textSecondary,
+                      ? context.appColors.onPrimaryFixed
+                      : context.appColors.textSecondary,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
@@ -848,9 +848,9 @@ class _EditListingScreenState extends State<EditListingScreen> {
                   }
                 });
               },
-              backgroundColor: AppColors.surfaceContainerHigh,
-              selectedColor: AppColors.primaryFixed,
-              checkmarkColor: AppColors.onPrimaryFixed,
+              backgroundColor: context.appColors.surfaceContainerHigh,
+              selectedColor: context.appColors.primaryFixed,
+              checkmarkColor: context.appColors.onPrimaryFixed,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
                 side: BorderSide.none,
@@ -866,13 +866,13 @@ class _EditListingScreenState extends State<EditListingScreen> {
 
   Widget _buildBottomBar() {
     return Container(
-      color: AppColors.surfaceContainerLowest,
+      color: context.appColors.surfaceContainerLowest,
       padding: const EdgeInsets.only(left: 24, right: 24, bottom: 32, top: 16),
       child: Container(
         width: double.infinity,
         height: 56,
         decoration: BoxDecoration(
-          gradient: AppColors.primaryGradient,
+          gradient: context.appColors.primaryGradient,
           borderRadius: BorderRadius.circular(28),
         ),
         child: ElevatedButton(
@@ -885,21 +885,21 @@ class _EditListingScreenState extends State<EditListingScreen> {
             ),
           ),
           child: _isLoading
-              ? const SizedBox(
+              ? SizedBox(
                   width: 24,
                   height: 24,
                   child: CircularProgressIndicator(
-                    color: AppColors.onPrimary,
+                    color: context.appColors.onPrimary,
                     strokeWidth: 2.5,
                   ),
                 )
-              : const Text(
+              : Text(
                   'Save Changes',
                   style: TextStyle(
                     fontFamily: 'Manrope',
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.onPrimary,
+                    color: context.appColors.onPrimary,
                   ),
                 ),
         ),

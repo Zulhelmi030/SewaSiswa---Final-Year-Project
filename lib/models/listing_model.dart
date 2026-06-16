@@ -56,7 +56,6 @@ class ListingModel {
   });
 
   factory ListingModel.fromJson(Map<String, dynamic> json) {
-    print("Raw JSON received 1: $json");
     final photos = json['listing_photos'];
     // Extract all photo URLs from joined listing_photos if present
     List<String> imageUrlsList = [];
@@ -66,14 +65,13 @@ class ListingModel {
           .whereType<String>()
           .toList();
     }
-    print("Raw JSON received 2: $json");
+
     // Parse facilities array from Postgres TEXT[]
     List<String>? facilitiesList;
     final rawFacilities = json['facilities'];
     if (rawFacilities != null && rawFacilities is List) {
       facilitiesList = List<String>.from(rawFacilities);
     }
-    print("Raw JSON received 3: $json");
 
     return ListingModel(
       id: json['id'] as String,

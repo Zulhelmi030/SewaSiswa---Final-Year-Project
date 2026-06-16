@@ -7,6 +7,8 @@ class UserModel {
   final String? faculty;
   final String? phoneNumber;
   final DateTime? createdAt;
+  final String? avatarUrl;
+  final String? bio;
 
   UserModel({
     required this.id,
@@ -17,6 +19,8 @@ class UserModel {
     this.faculty,
     this.phoneNumber,
     this.createdAt,
+    this.avatarUrl,
+    this.bio,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -28,9 +32,11 @@ class UserModel {
       matricNumber: json['matric_number'] as String?,
       faculty: json['faculty'] as String?,
       phoneNumber: json['phone_number'] as String?,
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at'] as String) 
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
           : null,
+      avatarUrl: json['avatar_url'] as String?,
+      bio: json['bio'] as String?,
     );
   }
 
@@ -44,6 +50,8 @@ class UserModel {
       if (faculty != null) 'faculty': faculty,
       if (phoneNumber != null) 'phone_number': phoneNumber,
       if (createdAt != null) 'created_at': createdAt?.toIso8601String(),
+      if (avatarUrl != null) 'avatar_url': avatarUrl,
+      if (bio != null) 'bio': bio,
     };
   }
 }

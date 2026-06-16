@@ -3,12 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../routes/app_routes.dart';
 import '../../models/listing_model.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
 import '../../shared/widgets/skeletons.dart';
 import 'dart:ui';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
+import '../../shared/widgets/user_avatar.dart';
 
 class ListingDetailScreen extends StatefulWidget {
   final ListingModel? listing;
@@ -24,9 +24,14 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   bool _isLoadingOwner = true;
   bool _isFavourited = false;
   bool _isTogglingFav = false;
+  bool _isApplying = false;
+  String? _applicationStatus;
   final PageController _pageController = PageController();
   int _currentPage = 0;
   String _ownerName = 'Loading...';
+  String? _ownerAvatarUrl;
+  int? _ownerMemberSinceYear;
+  String? _ownerBio;
 
   @override
   void dispose() {
@@ -39,6 +44,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     super.initState();
     _fetchOwner();
     _fetchWishlistStatus();
+    _fetchApplicationStatus();
   }
 
   Future<void> _fetchOwner() async {
@@ -50,13 +56,18 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     try {
       final row = await Supabase.instance.client
           .from('users')
-          .select('full_name')
+          .select('full_name, avatar_url, created_at, bio')
           .eq('id', listing.ownerId)
           .maybeSingle();
       if (mounted) {
         setState(() {
           _ownerName =
               row?['full_name'] as String? ?? listing.ownerId.substring(0, 8);
+          _ownerAvatarUrl = row?['avatar_url'] as String?;
+          _ownerBio = row?['bio'] as String?;
+          if (row?['created_at'] != null) {
+            _ownerMemberSinceYear = DateTime.tryParse(row!['created_at'])?.year;
+          }
           _isLoadingOwner = false;
         });
       }
@@ -108,6 +119,83 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     }
   }
 
+  Future<void> _fetchApplicationStatus() async {
+    final listingId = widget.listing?.id;
+    final userId = _client.auth.currentUser?.id;
+    if (listingId == null || userId == null) return;
+    try {
+      final row = await _client
+          .from('rental_tenants')
+          .select('status')
+          .eq('user_id', userId)
+          .eq('listing_id', listingId)
+          .maybeSingle();
+      if (mounted) {
+        setState(() => _applicationStatus = row?['status'] as String?);
+      }
+    } catch (e) {
+      debugPrint('Error fetching application status: $e');
+    }
+  }
+
+  Future<void> _applyForListing() async {
+    final listingId = widget.listing?.id;
+    final userId = _client.auth.currentUser?.id;
+    if (listingId == null || userId == null || _isApplying) return;
+
+    setState(() => _isApplying = true);
+    try {
+      // 1. Insert into rental_tenants as 'pending'
+      await _client.from('rental_tenants').insert({
+        'listing_id': listingId,
+        'user_id': userId,
+        'tenant_role': 'house_member',
+        'status': 'pending',
+      });
+
+      // 2. Fetch current user info for the notification body
+      final userRow = await _client
+          .from('users')
+          .select('full_name')
+          .eq('id', userId)
+          .maybeSingle();
+      final userName = userRow?['full_name'] as String? ?? 'A user';
+
+      // 3. Notify the owner
+      if (widget.listing?.ownerId != null) {
+        await _client.from('notifications').insert({
+          'user_id': widget.listing!.ownerId,
+          'title': 'New Booking Request',
+          'body': '$userName has requested to join ${widget.listing!.title}',
+          'type': 'booking',
+          'related_id': listingId,
+        });
+      }
+
+      if (mounted) {
+        setState(() => _applicationStatus = 'pending');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Booking request sent!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error applying for listing: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to apply: $e'),
+            backgroundColor: context.appColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isApplying = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Dummy model for prototype preview if no listing is passed
@@ -136,7 +224,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         );
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.appColors.background,
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -151,8 +239,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 // Main Content Card
                 Container(
                   transform: Matrix4.translationValues(0, -32, 0),
-                  decoration: const BoxDecoration(
-                    color: AppColors.surfaceBright,
+                  decoration: BoxDecoration(
+                    color: context.appColors.surfaceBright,
                     borderRadius: BorderRadius.vertical(
                       top: Radius.circular(32),
                     ),
@@ -266,7 +354,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   color: Colors.black.withValues(alpha: 0.3),
                   child: Text(
                     "${_currentPage + 1} / ${imageUrls.length}",
-                    style: AppTextStyles.labelCaps.copyWith(
+                    style: context.appTextStyles.labelCaps.copyWith(
                       color: Colors.white,
                       letterSpacing: 1.5,
                     ),
@@ -314,8 +402,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             Expanded(
               child: Text(
                 listing.title,
-                style: AppTextStyles.headlineLarge.copyWith(
-                  color: AppColors.primary,
+                style: context.appTextStyles.headlineLarge.copyWith(
+                  color: context.appColors.primary,
                 ),
               ),
             ),
@@ -325,14 +413,14 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               children: [
                 Text(
                   "RM ${listing.monthlyRent.toStringAsFixed(0)}",
-                  style: AppTextStyles.headlineMedium.copyWith(
-                    color: AppColors.secondary,
+                  style: context.appTextStyles.headlineMedium.copyWith(
+                    color: context.appColors.secondary,
                   ),
                 ),
                 Text(
                   "PER MONTH",
-                  style: AppTextStyles.labelCaps.copyWith(
-                    color: AppColors.outline,
+                  style: context.appTextStyles.labelCaps.copyWith(
+                    color: context.appColors.outline,
                   ),
                 ),
               ],
@@ -342,17 +430,17 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         const SizedBox(height: 8),
         Row(
           children: [
-            const Icon(
+            Icon(
               Icons.location_on,
               size: 16,
-              color: AppColors.onSurfaceVariant,
+              color: context.appColors.onSurfaceVariant,
             ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 listing.fullAddress,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                style: context.appTextStyles.bodyMedium.copyWith(
+                  color: context.appColors.onSurfaceVariant,
                 ),
               ),
             ),
@@ -367,34 +455,34 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.primaryFixed,
+                color: context.appColors.primaryFixed,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.school,
                     size: 18,
-                    color: AppColors.onPrimaryFixed,
+                    color: context.appColors.onPrimaryFixed,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     "0.8 km from UTeM Main Campus", // In a real app, calculate this
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: AppColors.onPrimaryFixed,
+                    style: context.appTextStyles.labelMedium.copyWith(
+                      color: context.appColors.onPrimaryFixed,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
               ),
             ),
-            
+
             // Post Type Badge
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: listing.postType == 'housemate' 
+                color: listing.postType == 'housemate'
                     ? Colors.orange.withValues(alpha: 0.15)
                     : Colors.teal.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
@@ -405,13 +493,19 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   Icon(
                     listing.postType == 'housemate' ? Icons.group : Icons.home,
                     size: 18,
-                    color: listing.postType == 'housemate' ? Colors.orange.shade800 : Colors.teal.shade800,
+                    color: listing.postType == 'housemate'
+                        ? Colors.orange.shade800
+                        : Colors.teal.shade800,
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    listing.postType == 'housemate' ? 'Housemate Wanted' : 'Full Property',
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: listing.postType == 'housemate' ? Colors.orange.shade800 : Colors.teal.shade800,
+                    listing.postType == 'housemate'
+                        ? 'Housemate Wanted'
+                        : 'Full Property',
+                    style: context.appTextStyles.labelMedium.copyWith(
+                      color: listing.postType == 'housemate'
+                          ? Colors.orange.shade800
+                          : Colors.teal.shade800,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -420,11 +514,15 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             ),
 
             // Available Slots Badge (only for housemate)
-            if (listing.postType == 'housemate' && listing.availableSlots != null)
+            if (listing.postType == 'housemate' &&
+                listing.availableSlots != null)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
-                  color: listing.availableSlots! > 0 
+                  color: listing.availableSlots! > 0
                       ? Colors.green.withValues(alpha: 0.15)
                       : Colors.red.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
@@ -433,17 +531,23 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      listing.availableSlots! > 0 ? Icons.check_circle : Icons.cancel,
+                      listing.availableSlots! > 0
+                          ? Icons.check_circle
+                          : Icons.cancel,
                       size: 18,
-                      color: listing.availableSlots! > 0 ? Colors.green.shade700 : Colors.red.shade700,
+                      color: listing.availableSlots! > 0
+                          ? Colors.green.shade700
+                          : Colors.red.shade700,
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      listing.availableSlots! > 0 
+                      listing.availableSlots! > 0
                           ? '${listing.availableSlots} slots left (of ${listing.totalSlots})'
                           : 'Fully Occupied',
-                      style: AppTextStyles.labelMedium.copyWith(
-                        color: listing.availableSlots! > 0 ? Colors.green.shade800 : Colors.red.shade800,
+                      style: context.appTextStyles.labelMedium.copyWith(
+                        color: listing.availableSlots! > 0
+                            ? Colors.green.shade800
+                            : Colors.red.shade800,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -481,9 +585,11 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceContainer,
+                  color: context.appColors.surfaceContainer,
                   border: Border.all(
-                    color: AppColors.outlineVariant.withValues(alpha: 0.15),
+                    color: context.appColors.outlineVariant.withValues(
+                      alpha: 0.15,
+                    ),
                   ),
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -491,14 +597,14 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   children: [
                     Icon(
                       getIconFor(f),
-                      color: AppColors.onSurfaceVariant,
+                      color: context.appColors.onSurfaceVariant,
                       size: 18,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       f,
-                      style: AppTextStyles.labelMedium.copyWith(
-                        color: AppColors.textPrimary,
+                      style: context.appTextStyles.labelMedium.copyWith(
+                        color: context.appColors.textPrimary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -517,19 +623,19 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Description", style: AppTextStyles.titleLarge),
+        Text("Description", style: context.appTextStyles.titleLarge),
         const SizedBox(height: 16),
         Text(
           listing.description,
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.onSurfaceVariant,
+          style: context.appTextStyles.bodyMedium.copyWith(
+            color: context.appColors.onSurfaceVariant,
             height: 1.6,
           ),
         ),
 
         if (rulesList.isNotEmpty) ...[
           const SizedBox(height: 32),
-          Text("House Rules", style: AppTextStyles.titleLarge),
+          Text("House Rules", style: context.appTextStyles.titleLarge),
           const SizedBox(height: 16),
           ...rulesList.map((rule) {
             if (rule.trim().isEmpty) return const SizedBox.shrink();
@@ -548,13 +654,13 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(icon, color: AppColors.secondary, size: 20),
+                  Icon(icon, color: context.appColors.secondary, size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       rule.trim(),
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                      style: context.appTextStyles.bodyMedium.copyWith(
+                        color: context.appColors.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -567,12 +673,16 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     );
   }
 
-  Widget _buildLandlordCard(String ratingDisplay, int reviewCount, String ownerId) {
+  Widget _buildLandlordCard(
+    String ratingDisplay,
+    int reviewCount,
+    String ownerId,
+  ) {
     if (_isLoadingOwner) return const LandlordCardSkeleton();
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.appColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -588,13 +698,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             children: [
               Stack(
                 children: [
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundColor: AppColors.surfaceContainerHigh,
-                    backgroundImage: const NetworkImage(
-                      'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150',
-                    ), // dummy avatar
-                  ),
+                  UserAvatar(radius: 32, imageUrl: _ownerAvatarUrl),
                   Positioned(
                     bottom: 0,
                     right: 0,
@@ -616,23 +720,23 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 children: [
                   Text(
                     _ownerName,
-                    style: AppTextStyles.titleMedium.copyWith(
+                    style: context.appTextStyles.titleMedium.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.star,
                         size: 16,
-                        color: AppColors.secondary,
+                        color: context.appColors.secondary,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         "$ratingDisplay ($reviewCount Reviews)",
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: AppColors.outline,
+                        style: context.appTextStyles.labelMedium.copyWith(
+                          color: context.appColors.outline,
                         ),
                       ),
                     ],
@@ -643,9 +747,9 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            "Verified UTeM Member since 2019. Known for quick maintenance response.",
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.onSurfaceVariant,
+            "${_ownerBio ?? 'Known for quick maintenance response.'} since ${_ownerMemberSinceYear ?? DateTime.now().year}",
+            style: context.appTextStyles.bodySmall.copyWith(
+              color: context.appColors.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 24),
@@ -655,15 +759,15 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               onPressed: () => context.push('/home/owner-profile/$ownerId'),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                side: const BorderSide(color: AppColors.outlineVariant),
+                side: BorderSide(color: context.appColors.outlineVariant),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(100),
                 ),
               ),
               child: Text(
                 "View Profile",
-                style: AppTextStyles.labelMedium.copyWith(
-                  color: AppColors.textPrimary,
+                style: context.appTextStyles.labelMedium.copyWith(
+                  color: context.appColors.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -678,12 +782,12 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Location", style: AppTextStyles.titleLarge),
+        Text("Location", style: context.appTextStyles.titleLarge),
         const SizedBox(height: 16),
         Container(
           height: 256,
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainer,
+            color: context.appColors.surfaceContainer,
             borderRadius: BorderRadius.circular(24),
             image: const DecorationImage(
               image: NetworkImage(
@@ -702,8 +806,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary,
+                      decoration: BoxDecoration(
+                        color: context.appColors.primary,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(color: Colors.black26, blurRadius: 8),
@@ -715,7 +819,11 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                         size: 24,
                       ),
                     ),
-                    Container(width: 2, height: 16, color: AppColors.primary),
+                    Container(
+                      width: 2,
+                      height: 16,
+                      color: context.appColors.primary,
+                    ),
                   ],
                 ),
               ),
@@ -728,7 +836,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             Expanded(
               child: Text(
                 listing.fullAddress,
-                style: AppTextStyles.bodyMedium.copyWith(
+                style: context.appTextStyles.bodyMedium.copyWith(
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -739,14 +847,11 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               clipBehavior: Clip.hardEdge,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.outlineVariant),
+                border: Border.all(color: context.appColors.outlineVariant),
               ),
               child: FlutterMap(
                 options: MapOptions(
-                  initialCenter: LatLng(
-                    listing.latitude,
-                    listing.longitude,
-                  ),
+                  initialCenter: LatLng(listing.latitude, listing.longitude),
                   initialZoom: 15.0, // Adjust zoom level to your liking
                   interactionOptions: const InteractionOptions(
                     flags: InteractiveFlag
@@ -763,15 +868,12 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   MarkerLayer(
                     markers: [
                       Marker(
-                        point: LatLng(
-                          listing.latitude,
-                          listing.longitude,
-                        ),
+                        point: LatLng(listing.latitude, listing.longitude),
                         width: 40,
                         height: 40,
-                        child: const Icon(
+                        child: Icon(
                           Icons.location_on,
-                          color: AppColors.primary,
+                          color: context.appColors.primary,
                           size: 40,
                         ),
                       ),
@@ -793,11 +895,15 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.9),
+            color: context.appColors.surfaceContainerLowest.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: context.appColors.glassOutline,
+              width: 1,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
+                color: context.appColors.primary.withValues(alpha: 0.12),
                 blurRadius: 32,
                 offset: const Offset(0, 12),
               ),
@@ -819,7 +925,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                         children: [
                           Text(
                             "RM ${listing.monthlyRent.toStringAsFixed(2)} / Month",
-                            style: AppTextStyles.titleMedium.copyWith(
+                            style: context.appTextStyles.titleMedium.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                             maxLines: 2,
@@ -829,40 +935,93 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                       ),
                     ),
                   ),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      final listing = widget.listing;
-                      if (listing == null) return;
-                      context.push(
-                        '/chat',
-                        extra: ChatArgs(
-                          receiverId: listing.ownerId,
-                          receiverName: _ownerName,
-                          listingId: listing.id,
-                          listingTitle: listing.title,
+                  Row(
+                    children: [
+                      // Chat Button
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: context.appColors.surfaceContainerHigh,
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryContainer,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
+                        child: IconButton(
+                          onPressed: () {
+                            final listing = widget.listing;
+                            if (listing == null) return;
+                            context.push(
+                              '/chat',
+                              extra: ChatArgs(
+                                receiverId: listing.ownerId,
+                                receiverName: _ownerName,
+                                listingId: listing.id,
+                                listingTitle: listing.title,
+                              ),
+                            );
+                          },
+                          icon: Icon(
+                            Icons.chat,
+                            color: context.appColors.primary,
+                          ),
+                          tooltip: 'Chat with Owner',
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(100),
+                      const SizedBox(width: 12),
+
+                      // Apply Button
+                      ElevatedButton(
+                        onPressed:
+                            (_applicationStatus == null &&
+                                !_isApplying &&
+                                _client.auth.currentUser?.id != listing.ownerId)
+                            ? _applyForListing
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _applicationStatus == 'pending'
+                              ? Colors.orange
+                              : _applicationStatus == 'active'
+                              ? Colors.green
+                              : context.appColors.primaryContainer,
+                          foregroundColor: _applicationStatus == 'pending' || _applicationStatus == 'active' 
+                              ? Colors.white 
+                              : context.appColors.onPrimaryContainer,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          elevation: 0,
+                          disabledBackgroundColor:
+                              context.appColors.surfaceContainerHigh,
+                        ),
+                        child: _isApplying
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                _applicationStatus == 'pending'
+                                    ? 'Requested'
+                                    : _applicationStatus == 'active'
+                                    ? 'Joined'
+                                    : 'Apply Now',
+                                style: context.appTextStyles.labelMedium
+                                    .copyWith(
+                                      color:
+                                          (_applicationStatus == null &&
+                                              _client.auth.currentUser?.id !=
+                                                  listing.ownerId)
+                                          ? Colors.white
+                                          : context.appColors.outline,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
                       ),
-                      elevation: 0,
-                    ),
-                    icon: const Icon(Icons.chat, size: 20),
-                    label: Text(
-                      listing.postType == 'housemate' ? "Contact Advertiser" : "Contact Landlord",
-                      style: AppTextStyles.labelMedium.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    ],
                   ),
                 ],
               ),

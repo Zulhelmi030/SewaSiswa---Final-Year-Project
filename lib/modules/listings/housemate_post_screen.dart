@@ -3,12 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:finalyearproject/core/constants/app_colors.dart';
-import 'package:finalyearproject/core/constants/app_text_styles.dart';
 import 'package:finalyearproject/core/services/image_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:go_router/go_router.dart';
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 
 class HousematePostScreen extends StatefulWidget {
   const HousematePostScreen({super.key});
@@ -136,7 +135,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
   void _showImageSourceDialog() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surfaceContainerLowest,
+      backgroundColor: context.appColors.surfaceContainerLowest,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -316,15 +315,15 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.appColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.appColors.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.onBackground),
+        iconTheme: IconThemeData(color: context.appColors.onSurface),
         title: Text(
           'Find a Housemate',
-          style: AppTextStyles.titleLarge.copyWith(
-            color: AppColors.onBackground,
+          style: context.appTextStyles.titleLarge.copyWith(
+            color: context.appColors.onSurface,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -347,22 +346,22 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
 
   Widget _buildPhotoUploadSection() {
     return Container(
-      color: AppColors.surfaceContainerLowest,
+      color: context.appColors.surfaceContainerLowest,
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'House Photos',
-            style: AppTextStyles.titleMedium.copyWith(
+            style: context.appTextStyles.titleMedium.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             'Add photos of the house. First photo will be the cover.',
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textSecondary,
+            style: context.appTextStyles.bodySmall.copyWith(
+              color: context.appColors.textSecondary,
             ),
           ),
           const SizedBox(height: 16),
@@ -394,19 +393,19 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
         width: 120,
         height: 120,
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerHigh,
+          color: context.appColors.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.outlineVariant),
+          border: Border.all(color: context.appColors.outlineVariant),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.add_a_photo, color: AppColors.primary, size: 32),
+            Icon(Icons.add_a_photo, color: context.appColors.primary, size: 32),
             const SizedBox(height: 8),
             Text(
               'Add Photo',
-              style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.primary,
+              style: context.appTextStyles.labelMedium.copyWith(
+                color: context.appColors.primary,
               ),
             ),
           ],
@@ -434,7 +433,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
                 color: Colors.white70,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.close, size: 20, color: AppColors.error),
+              child: Icon(Icons.close, size: 20, color: context.appColors.error),
             ),
           ),
         ),
@@ -446,7 +445,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
 
   Widget _buildFormSection() {
     return Container(
-      color: AppColors.surfaceContainerLowest,
+      color: context.appColors.surfaceContainerLowest,
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -457,7 +456,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
           _buildRoommateSlotsSection(),
 
           const SizedBox(height: 24),
-          const Divider(color: AppColors.surfaceVariant),
+          Divider(color: context.appColors.surfaceVariant),
           const SizedBox(height: 24),
 
           // ── Property Details ────────────────────────────────────────────────
@@ -500,7 +499,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
           ),
 
           const SizedBox(height: 24),
-          const Divider(color: AppColors.surfaceVariant),
+          Divider(color: context.appColors.surfaceVariant),
           const SizedBox(height: 24),
 
           // ── Pricing ─────────────────────────────────────────────────────────
@@ -531,7 +530,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
           ),
 
           const SizedBox(height: 24),
-          const Divider(color: AppColors.surfaceVariant),
+          Divider(color: context.appColors.surfaceVariant),
           const SizedBox(height: 24),
 
           // ── Preferences & Rules ─────────────────────────────────────────────
@@ -547,7 +546,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
           ),
 
           const SizedBox(height: 24),
-          const Divider(color: AppColors.surfaceVariant),
+          Divider(color: context.appColors.surfaceVariant),
           const SizedBox(height: 24),
 
           // ── Facilities ──────────────────────────────────────────────────────
@@ -556,7 +555,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
           _buildFacilitiesSelector(),
 
           const SizedBox(height: 24),
-          const Divider(color: AppColors.surfaceVariant),
+          Divider(color: context.appColors.surfaceVariant),
           const SizedBox(height: 24),
 
           // ── Tenancy Inclusion ───────────────────────────────────────────────
@@ -572,38 +571,38 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
     return Container(
       decoration: BoxDecoration(
         color: _includeAsTenant
-            ? AppColors.primary.withValues(alpha: 0.08)
-            : AppColors.surfaceContainerHigh,
+            ? context.appColors.primary.withValues(alpha: 0.08)
+            : context.appColors.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: _includeAsTenant
-              ? AppColors.primary.withValues(alpha: 0.4)
-              : AppColors.outlineVariant,
+              ? context.appColors.primary.withValues(alpha: 0.4)
+              : context.appColors.outlineVariant,
           width: 1.5,
         ),
       ),
       child: CheckboxListTile(
         value: _includeAsTenant,
         onChanged: (val) => setState(() => _includeAsTenant = val ?? false),
-        activeColor: AppColors.primary,
+        activeColor: context.appColors.primary,
         checkboxShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(6),
         ),
         title: Text(
           'Include me as a tenant',
-          style: AppTextStyles.bodyMedium.copyWith(
+          style: context.appTextStyles.bodyMedium.copyWith(
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
         subtitle: Text(
           _includeAsTenant
               ? 'You will be listed as a tenant living in this house'
               : 'You are the house owner — you will not be listed as a tenant',
-          style: AppTextStyles.bodySmall.copyWith(
+          style: context.appTextStyles.bodySmall.copyWith(
             color: _includeAsTenant
-                ? AppColors.primary
-                : AppColors.textSecondary,
+                ? context.appColors.primary
+                : context.appColors.textSecondary,
           ),
         ),
         controlAffinity: ListTileControlAffinity.leading,
@@ -619,9 +618,9 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.primaryFixed.withValues(alpha: 0.15),
+        color: context.appColors.primaryFixed.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        border: Border.all(color: context.appColors.primary.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -638,17 +637,17 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
                 height: 36,
                 decoration: BoxDecoration(
                   color: isFilled
-                      ? AppColors.primary
-                      : AppColors.primary.withValues(alpha: 0.12),
+                      ? context.appColors.primary
+                      : context.appColors.primary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.3),
+                    color: context.appColors.primary.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Icon(
                   isFilled ? Icons.person : Icons.person_outline,
                   size: 18,
-                  color: isFilled ? Colors.white : AppColors.primary,
+                  color: isFilled ? Colors.white : context.appColors.primary,
                 ),
               );
             }),
@@ -656,8 +655,8 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
           const SizedBox(height: 16),
           Text(
             '$_occupiedSlots / $_totalSlots filled · Looking for $available more',
-            style: AppTextStyles.titleMedium.copyWith(
-              color: AppColors.primary,
+            style: context.appTextStyles.titleMedium.copyWith(
+              color: context.appColors.primary,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -711,8 +710,8 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
         Expanded(
           child: Text(
             label,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+            style: context.appTextStyles.bodyMedium.copyWith(
+              color: context.appColors.textSecondary,
             ),
           ),
         ),
@@ -727,9 +726,9 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
               child: Text(
                 '$value',
                 textAlign: TextAlign.center,
-                style: AppTextStyles.titleMedium.copyWith(
+                style: context.appTextStyles.titleMedium.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: context.appColors.textPrimary,
                 ),
               ),
             ),
@@ -752,14 +751,14 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
         height: 32,
         decoration: BoxDecoration(
           color: onTap != null
-              ? AppColors.primary
-              : AppColors.outline.withValues(alpha: 0.2),
+              ? context.appColors.primary
+              : context.appColors.outline.withValues(alpha: 0.2),
           shape: BoxShape.circle,
         ),
         child: Icon(
           icon,
           size: 16,
-          color: onTap != null ? Colors.white : AppColors.outline,
+          color: onTap != null ? Colors.white : context.appColors.outline,
         ),
       ),
     );
@@ -773,17 +772,17 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
+            color: context.appColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: AppColors.primary, size: 20),
+          child: Icon(icon, color: context.appColors.primary, size: 20),
         ),
         const SizedBox(width: 12),
         Text(
           title,
-          style: AppTextStyles.titleMedium.copyWith(
+          style: context.appTextStyles.titleMedium.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
       ],
@@ -803,9 +802,9 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
       children: [
         Text(
           label,
-          style: AppTextStyles.labelMedium.copyWith(
+          style: context.appTextStyles.labelMedium.copyWith(
             fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
@@ -816,11 +815,11 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
           decoration: InputDecoration(
             hintText: placeholder,
             prefixText: prefixText,
-            hintStyle: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.outline,
+            hintStyle: context.appTextStyles.bodyMedium.copyWith(
+              color: context.appColors.outline,
             ),
             filled: true,
-            fillColor: AppColors.surfaceContainerHigh,
+            fillColor: context.appColors.surfaceContainerHigh,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14,
@@ -831,7 +830,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              borderSide: BorderSide(color: context.appColors.primary, width: 2),
             ),
           ),
         ),
@@ -845,9 +844,9 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
       children: [
         Text(
           'State',
-          style: AppTextStyles.labelMedium.copyWith(
+          style: context.appTextStyles.labelMedium.copyWith(
             fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
@@ -855,7 +854,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
           initialValue: _selectedState,
           hint: Text(
             'Select a state',
-            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.outline),
+            style: context.appTextStyles.bodyMedium.copyWith(color: context.appColors.outline),
           ),
           items: _stateCityMap.keys
               .map(
@@ -863,8 +862,8 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
                   value: state,
                   child: Text(
                     state,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textPrimary,
+                    style: context.appTextStyles.bodyMedium.copyWith(
+                      color: context.appColors.textPrimary,
                     ),
                   ),
                 ),
@@ -878,14 +877,14 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
           },
           decoration: InputDecoration(
             filled: true,
-            fillColor: AppColors.surfaceContainerHigh,
+            fillColor: context.appColors.surfaceContainerHigh,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              borderSide: BorderSide(color: context.appColors.primary, width: 2),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -906,9 +905,9 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
       children: [
         Text(
           'City',
-          style: AppTextStyles.labelMedium.copyWith(
+          style: context.appTextStyles.labelMedium.copyWith(
             fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
@@ -916,7 +915,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
           initialValue: _selectedCity,
           hint: Text(
             'Select a city',
-            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.outline),
+            style: context.appTextStyles.bodyMedium.copyWith(color: context.appColors.outline),
           ),
           items: cities
               .map(
@@ -924,8 +923,8 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
                   value: city,
                   child: Text(
                     city,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textPrimary,
+                    style: context.appTextStyles.bodyMedium.copyWith(
+                      color: context.appColors.textPrimary,
                     ),
                   ),
                 ),
@@ -936,14 +935,14 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
               : (value) => setState(() => _selectedCity = value),
           decoration: InputDecoration(
             filled: true,
-            fillColor: AppColors.surfaceContainerHigh,
+            fillColor: context.appColors.surfaceContainerHigh,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              borderSide: BorderSide(color: context.appColors.primary, width: 2),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -962,9 +961,9 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
       children: [
         Text(
           'Gender Preference',
-          style: AppTextStyles.labelMedium.copyWith(
+          style: context.appTextStyles.labelMedium.copyWith(
             fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
@@ -976,9 +975,9 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
               child: ChoiceChip(
                 label: Text(option),
                 selected: isSelected,
-                selectedColor: AppColors.primary,
-                labelStyle: AppTextStyles.labelMedium.copyWith(
-                  color: isSelected ? Colors.white : AppColors.textPrimary,
+                selectedColor: context.appColors.primary,
+                labelStyle: context.appTextStyles.labelMedium.copyWith(
+                  color: isSelected ? Colors.white : context.appColors.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
                 onSelected: (_) => setState(() => _selectedGender = option),
@@ -999,14 +998,14 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
         return FilterChip(
           label: Text(facility),
           selected: isSelected,
-          selectedColor: AppColors.primary.withValues(alpha: 0.15),
-          checkmarkColor: AppColors.primary,
-          labelStyle: AppTextStyles.labelMedium.copyWith(
-            color: isSelected ? AppColors.primary : AppColors.textSecondary,
+          selectedColor: context.appColors.primary.withValues(alpha: 0.15),
+          checkmarkColor: context.appColors.primary,
+          labelStyle: context.appTextStyles.labelMedium.copyWith(
+            color: isSelected ? context.appColors.primary : context.appColors.textSecondary,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),
           side: BorderSide(
-            color: isSelected ? AppColors.primary : AppColors.outlineVariant,
+            color: isSelected ? context.appColors.primary : context.appColors.outlineVariant,
           ),
           onSelected: (selected) {
             setState(() {
@@ -1029,7 +1028,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
+          color: context.appColors.surfaceContainerLowest,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.06),
@@ -1043,7 +1042,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
           child: FilledButton(
             onPressed: _isLoading ? null : _submit,
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: context.appColors.primary,
               padding: const EdgeInsets.symmetric(vertical: 18),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -1060,7 +1059,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
                   )
                 : Text(
                     'Post Housemate Listing',
-                    style: AppTextStyles.labelMedium.copyWith(
+                    style: context.appTextStyles.labelMedium.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
                       fontSize: 16,

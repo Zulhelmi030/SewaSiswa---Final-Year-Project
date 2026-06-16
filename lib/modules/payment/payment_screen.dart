@@ -4,10 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
 import '../../core/services/payment_service.dart';
 import '../../core/services/image_service.dart';
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
@@ -97,7 +96,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
           'user_id': tenantUserId,
           'name': userData?['full_name'] ?? 'Unknown Member',
           // A member is 'paid' if their payment record status is 'succeeded' or 'paid'
-          'status': (payment?['status'] == 'paid' || payment?['status'] == 'succeeded')
+          'status':
+              (payment?['status'] == 'paid' ||
+                  payment?['status'] == 'succeeded')
               ? 'paid'
               : 'pending',
           'receipt_url': payment?['receipt_url'],
@@ -156,13 +157,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.appColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
           'Payment',
-          style: AppTextStyles.headlineSmall.copyWith(
+          style: context.appTextStyles.headlineSmall.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -181,16 +182,61 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     const SizedBox(height: 24),
                     _buildPaidToOwnerCard(),
                     const SizedBox(height: 24),
-                    if (!_isHouseLeader) ...[
-                      _buildMakePaymentButton(),
-                      const SizedBox(height: 24),
-                    ],
                     _buildHousematesCard(),
                     const SizedBox(height: 32),
                   ],
                 ),
               ),
             ),
+      bottomNavigationBar: (!_isLoading && !_isHouseLeader)
+          ? _buildStickyBottomBar()
+          : null,
+    );
+  }
+
+  Widget _buildStickyBottomBar() {
+    return Container(
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 16,
+        bottom: MediaQuery.of(context).padding.bottom + 16,
+      ),
+      decoration: BoxDecoration(
+        color: context.appColors.surfaceContainerLowest,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            offset: const Offset(0, -4),
+            blurRadius: 16,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildMakePaymentButton(),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.lock_outline,
+                size: 14,
+                color: context.appColors.onSurfaceVariant,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Secure encrypted payment',
+                style: context.appTextStyles.labelSmall.copyWith(
+                  color: context.appColors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -200,22 +246,20 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Widget _buildCountdownCard() {
-    final days    = _timeLeft.inDays;
-    final hours   = _timeLeft.inHours.remainder(24);
+    final days = _timeLeft.inDays;
+    final hours = _timeLeft.inHours.remainder(24);
     final minutes = _timeLeft.inMinutes.remainder(60);
     final seconds = _timeLeft.inSeconds.remainder(60);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.appColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border(
-          left: BorderSide(color: AppColors.primary, width: 4),
-        ),
+        border: Border(left: BorderSide(color: context.appColors.primary, width: 4)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.05),
+            color: context.appColors.primary.withValues(alpha: 0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -225,8 +269,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
         children: [
           Text(
             'DUE TO NEXT PAYMENT',
-            style: AppTextStyles.labelCaps.copyWith(
-              color: AppColors.primary,
+            style: context.appTextStyles.labelCaps.copyWith(
+              color: context.appColors.primary,
               letterSpacing: 1.5,
             ),
           ),
@@ -234,9 +278,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildTimerUnit(_pad(days),     'Days'),
+              _buildTimerUnit(_pad(days), 'Days'),
               _buildTimerDivider(),
-              _buildTimerUnit(_pad(hours),   'Hours'),
+              _buildTimerUnit(_pad(hours), 'Hours'),
               _buildTimerDivider(),
               _buildTimerUnit(_pad(minutes), 'Mins'),
               _buildTimerDivider(),
@@ -246,8 +290,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
           const SizedBox(height: 16),
           Text(
             'Your Split: RM ${_rentPerPerson.toStringAsFixed(2)}',
-            style: AppTextStyles.titleMedium.copyWith(
-              color: AppColors.primary,
+            style: context.appTextStyles.titleMedium.copyWith(
+              color: context.appColors.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -266,15 +310,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
           style: GoogleFonts.inter(
             fontSize: 32,
             fontWeight: FontWeight.w700,
-            color: AppColors.primary,
+            color: context.appColors.primary,
             letterSpacing: -1,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           label,
-          style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.onSurfaceVariant,
+          style: context.appTextStyles.labelSmall.copyWith(
+            color: context.appColors.onSurfaceVariant,
           ),
         ),
       ],
@@ -287,7 +331,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       style: GoogleFonts.inter(
         fontSize: 28,
         fontWeight: FontWeight.w700,
-        color: AppColors.outlineVariant,
+        color: context.appColors.outlineVariant,
       ),
     );
   }
@@ -304,17 +348,23 @@ class _PaymentScreenState extends State<PaymentScreen> {
           context: context,
           amountInCents: amountInCents,
           currency: 'myr',
+          metadata: {
+            'rental_id': _listingId,
+            'sender_id': Supabase.instance.client.auth.currentUser!.id,
+            'receiver_id': _ownerId,
+            'method': 'gateway',
+          },
         );
         setState(() => _isLoading = false);
       },
       style: FilledButton.styleFrom(
-        backgroundColor: AppColors.secondaryContainer,
+        backgroundColor: context.appColors.primary,
         shape: const StadiumBorder(),
         padding: const EdgeInsets.symmetric(vertical: 16),
       ),
       child: Text(
         'Make Payment (RM ${_rentPerPerson.toStringAsFixed(2)})',
-        style: AppTextStyles.titleMedium.copyWith(
+        style: context.appTextStyles.titleMedium.copyWith(
           color: Colors.white,
           fontWeight: FontWeight.w600,
         ),
@@ -330,10 +380,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 8.0, bottom: 12.0),
-          child: Text('Housemates', style: AppTextStyles.headlineSmall.copyWith(fontWeight: FontWeight.bold)),
+          child: Text(
+            'Housemates',
+            style: context.appTextStyles.headlineSmall.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
         Column(
-          children: _housemates.map((member) => _buildHousemateRow(member)).toList(),
+          children: _housemates
+              .map((member) => _buildHousemateRow(member))
+              .toList(),
         ),
       ],
     );
@@ -342,17 +399,18 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Widget _buildHousemateRow(Map<String, dynamic> member) {
     final isPaid = member['status'] == 'paid';
     final String? receiptUrl = member['receipt_url'] as String?;
-    final bool isMe = member['user_id'] == Supabase.instance.client.auth.currentUser?.id;
+    final bool isMe =
+        member['user_id'] == Supabase.instance.client.auth.currentUser?.id;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.appColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1A1C1C).withOpacity(0.06),
+            color: context.appColors.textPrimary.withValues(alpha: 0.06),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -369,15 +427,18 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceContainerHigh,
+                    color: context.appColors.surfaceContainerHigh,
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.surfaceContainerLowest, width: 2),
+                    border: Border.all(
+                      color: context.appColors.surfaceContainerLowest,
+                      width: 2,
+                    ),
                   ),
                   child: Center(
                     child: Text(
                       member['name'][0].toUpperCase(),
-                      style: AppTextStyles.titleLarge.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                      style: context.appTextStyles.titleLarge.copyWith(
+                        color: context.appColors.onSurfaceVariant,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -390,8 +451,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     children: [
                       Text(
                         member['name'],
-                        style: AppTextStyles.titleMedium.copyWith(
-                          color: AppColors.textPrimary,
+                        style: context.appTextStyles.titleMedium.copyWith(
+                          color: context.appColors.textPrimary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -399,15 +460,22 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
-                              color: isPaid ? const Color(0xFFECFDF5) : const Color(0xFFFFFBEB),
+                              color: isPaid
+                                  ? context.appColors.tertiaryContainer
+                                  : context.appColors.warningContainer,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               isPaid ? 'Paid' : 'Pending',
-                              style: AppTextStyles.labelSmall.copyWith(
-                                color: isPaid ? const Color(0xFF059669) : const Color(0xFFD97706),
+                              style: context.appTextStyles.labelSmall.copyWith(
+                                color: isPaid
+                                    ? context.appColors.onTertiaryContainer
+                                    : context.appColors.warning,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 10,
                               ),
@@ -416,8 +484,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           const SizedBox(width: 8),
                           Text(
                             'RM ${_rentPerPerson.toStringAsFixed(0)}',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.onSurfaceVariant,
+                            style: context.appTextStyles.bodySmall.copyWith(
+                              color: context.appColors.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -436,9 +504,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 IconButton(
                   onPressed: () => _showReceiptDialog(receiptUrl),
                   icon: const Icon(Icons.receipt_long_rounded),
-                  color: AppColors.primary,
+                  color: context.appColors.primary,
                   style: IconButton.styleFrom(
-                    backgroundColor: AppColors.primary.withOpacity(0.1),
+                    backgroundColor: context.appColors.primary.withValues(alpha: 0.1),
                   ),
                 ),
                 if (isMe) ...[
@@ -446,7 +514,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   IconButton(
                     onPressed: () => _uploadReceipt(member),
                     icon: const Icon(Icons.edit_rounded, size: 20),
-                    color: AppColors.onSurfaceVariant,
+                    color: context.appColors.onSurfaceVariant,
                   ),
                 ],
               ],
@@ -455,9 +523,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
             IconButton(
               onPressed: () => _uploadReceipt(member),
               icon: const Icon(Icons.upload_file_rounded),
-              color: AppColors.onSurfaceVariant,
+              color: context.appColors.onSurfaceVariant,
               style: IconButton.styleFrom(
-                backgroundColor: AppColors.surfaceContainerHigh,
+                backgroundColor: context.appColors.surfaceContainerHigh,
               ),
             ),
         ],
@@ -513,16 +581,29 @@ class _PaymentScreenState extends State<PaymentScreen> {
             'receipt_url': publicUrl,
           });
         }
+
+        // Notify the owner
+        try {
+          await supabase.from('notifications').insert({
+            'user_id': _ownerId,
+            'title': 'Receipt Uploaded',
+            'message': '${member['name']} has uploaded a manual payment receipt for RM ${_rentPerPerson.toStringAsFixed(0)}.',
+            'type': 'payment',
+          });
+        } catch (_) {}
+
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Receipt uploaded!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Receipt uploaded!')));
         _loadData(); // Refresh to show the new receipt icon
       } catch (e) {
         debugPrint('DB error: $e');
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Uploaded but failed to save to database.')),
+          const SnackBar(
+            content: Text('Uploaded but failed to save to database.'),
+          ),
         );
       }
     } else {
@@ -546,7 +627,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
               child: Row(
                 children: [
                   const Expanded(
-                    child: Text('Payment Receipt', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    child: Text(
+                      'Payment Receipt',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -561,17 +648,30 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
-                    const Icon(Icons.picture_as_pdf, size: 64, color: Colors.red),
+                    const Icon(
+                      Icons.picture_as_pdf,
+                      size: 64,
+                      color: Colors.red,
+                    ),
                     const SizedBox(height: 12),
-                    const Text('PDF Receipt', style: TextStyle(fontWeight: FontWeight.w600)),
+                    const Text(
+                      'PDF Receipt',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     const SizedBox(height: 4),
-                    Text(url, style: const TextStyle(fontSize: 11, color: Colors.grey), textAlign: TextAlign.center),
+                    Text(
+                      url,
+                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
                   ],
                 ),
               )
             else
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(16),
+                ),
                 child: Image.network(
                   url,
                   fit: BoxFit.contain,
@@ -610,18 +710,23 @@ class _PaymentScreenState extends State<PaymentScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.only(left: 8.0),
-              child: Text('Paid to House Owner', style: AppTextStyles.headlineSmall.copyWith(fontWeight: FontWeight.bold)),
+              child: Text(
+                'Paid to House Owner',
+                style: context.appTextStyles.headlineSmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.surfaceContainerHigh,
+                color: context.appColors.surfaceContainerHigh,
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
                 allPaid ? 'All Paid' : 'Due Soon',
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                style: context.appTextStyles.labelSmall.copyWith(
+                  color: context.appColors.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -633,18 +738,22 @@ class _PaymentScreenState extends State<PaymentScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Color(0xE6002653), // rgba(0, 38, 83, 0.9)
-                Color(0xF21A3C6E), // rgba(26, 60, 110, 0.95)
+                Theme.of(context).brightness == Brightness.dark 
+                    ? const Color(0xFF243B82) 
+                    : const Color(0xFF1B3A8C),
+                Theme.of(context).brightness == Brightness.dark 
+                    ? const Color(0xFF182C66) 
+                    : const Color(0xFF14296B),
               ],
             ),
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF1F2687).withOpacity(0.15),
+                color: context.appColors.primary.withValues(alpha: 0.15),
                 blurRadius: 32,
                 offset: const Offset(0, 8),
               ),
@@ -655,8 +764,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
             children: [
               Text(
                 'Total Collected',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: const Color(0xFF8AA8E0), // on-primary-container
+                style: context.appTextStyles.bodyMedium.copyWith(
+                  color: const Color(0xFFC7D4F5), // on-primary-container
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -667,7 +776,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 children: [
                   Text(
                     'RM ${(_totalRent).toStringAsFixed(0)}',
-                    style: AppTextStyles.headlineLarge.copyWith(
+                    style: context.appTextStyles.headlineLarge.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
                       letterSpacing: -1,
@@ -675,8 +784,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ),
                   Text(
                     '.00',
-                    style: AppTextStyles.titleMedium.copyWith(
-                      color: const Color(0xFF8AA8E0),
+                    style: context.appTextStyles.titleMedium.copyWith(
+                      color: const Color(0xFFC7D4F5),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -692,8 +801,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         icon: const Icon(Icons.visibility_rounded, size: 20),
                         label: const Text('View Master Receipt'),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.secondaryContainer,
-                          foregroundColor: AppColors.onSecondaryContainer,
+                          backgroundColor: context.appColors.secondaryContainer,
+                          foregroundColor: context.appColors.onSecondaryContainer,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                       ),
@@ -702,9 +811,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       const SizedBox(width: 8),
                       IconButton(
                         onPressed: _uploadMasterReceipt,
-                        icon: const Icon(Icons.edit_rounded, color: Colors.white),
+                        icon: const Icon(
+                          Icons.edit_rounded,
+                          color: Colors.white,
+                        ),
                         style: IconButton.styleFrom(
-                          backgroundColor: Colors.white.withOpacity(0.1),
+                          backgroundColor: Colors.white.withValues(alpha: 0.1),
                           padding: const EdgeInsets.all(16),
                         ),
                       ),
@@ -717,8 +829,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   icon: const Icon(Icons.upload_file_rounded, size: 20),
                   label: const Text('Upload Master Receipt'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.secondaryContainer,
-                    foregroundColor: AppColors.onSecondaryContainer,
+                    backgroundColor: context.appColors.secondaryContainer,
+                    foregroundColor: context.appColors.onSecondaryContainer,
                     minimumSize: const Size(double.infinity, 56),
                   ),
                 ),
@@ -778,6 +890,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
           });
         }
 
+        // Notify the owner
+        try {
+          await supabase.from('notifications').insert({
+            'user_id': _ownerId,
+            'title': 'Master Receipt Uploaded',
+            'message': 'The house leader has uploaded the master payment receipt for RM ${_totalRent.toStringAsFixed(0)}.',
+            'type': 'payment',
+          });
+        } catch (_) {}
+
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Owner receipt uploaded!')),
@@ -787,7 +909,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
         debugPrint('DB error: $e');
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Uploaded but failed to save to database.')),
+          const SnackBar(
+            content: Text('Uploaded but failed to save to database.'),
+          ),
         );
       }
     } else {
@@ -796,5 +920,4 @@ class _PaymentScreenState extends State<PaymentScreen> {
       );
     }
   }
-
 }

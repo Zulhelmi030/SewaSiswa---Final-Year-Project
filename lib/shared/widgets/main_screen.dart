@@ -2,7 +2,7 @@ import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.da
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 
 class MainScreen extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
@@ -69,20 +69,15 @@ class _MainScreenState extends State<MainScreen> {
         scale: _isBottomBarVisible ? 1.0 : 0.0,
         child: FloatingActionButton(
           heroTag: 'main_nav_fab',
-          onPressed: () async {
+          onPressed: () {
             final user = Supabase.instance.client.auth.currentUser;
             if (user == null) {
               context.push('/login');
               return;
             }
-            await context.push('/housemate-post');
-            // After returning from housemate post screen, go back to home
-            // branch so the listing list refreshes automatically
-            if (mounted) {
-              widget.navigationShell.goBranch(0, initialLocation: true);
-            }
+            context.push('/housemate-post');
           },
-          backgroundColor: AppColors.primary,
+          backgroundColor: context.appColors.primary,
           shape: const CircleBorder(),
           child: const Icon(Icons.add, color: Colors.white, size: 30),
         ),
@@ -99,9 +94,9 @@ class _MainScreenState extends State<MainScreen> {
           leftCornerRadius: 32,
           rightCornerRadius: 32,
           onTap: _onTap,
-          activeColor: AppColors.primary,
-          inactiveColor: AppColors.outlineVariant,
-          backgroundColor: AppColors.surfaceContainerLowest,
+          activeColor: context.appColors.primary,
+          inactiveColor: context.appColors.outlineVariant,
+          backgroundColor: context.appColors.surfaceContainerLowest,
           elevation: 0,
           iconSize: 28,
           height: 70,

@@ -18,12 +18,13 @@ serve(async (req) => {
   }
 
   try {
-    const { amount, currency } = await req.json()
+    const { amount, currency, metadata } = await req.json()
 
     // Create a PaymentIntent with the order amount and currency
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount,
       currency: currency,
+      metadata: metadata, // Pass the rental_id, sender_id, etc. here
       automatic_payment_methods: {
         enabled: true,
       },

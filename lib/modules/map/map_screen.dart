@@ -3,8 +3,8 @@ import "package:finalyearproject/models/listing_model.dart";
 import "package:supabase_flutter/supabase_flutter.dart";
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import '../../core/constants/app_colors.dart';
 import 'package:go_router/go_router.dart';
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 //import '../../core/constants/app_text_styles.dart';
 
 class MapScreen extends StatefulWidget {
@@ -93,10 +93,10 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                   ],
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.arrow_back,
                   size: 20,
-                  color: AppColors.textPrimary,
+                  color: context.appColors.textPrimary,
                 ),
               ),
             ),
@@ -165,7 +165,7 @@ class _MapScreenState extends State<MapScreen> {
             child: Container(
               decoration: BoxDecoration(
                 color: _selectedListing?.id == listing.id
-                    ? AppColors.primary
+                    ? context.appColors.primary
                     : Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: const [
@@ -181,7 +181,7 @@ class _MapScreenState extends State<MapScreen> {
                 size: 22,
                 color: _selectedListing?.id == listing.id
                     ? Colors.white
-                    : AppColors.primary,
+                    : context.appColors.primary,
               ),
             ),
           ),
@@ -219,10 +219,10 @@ class _MapScreenState extends State<MapScreen> {
                   : Container(
                       width: 110,
                       height: 110,
-                      color: AppColors.surfaceVariant,
-                      child: const Icon(
+                      color: context.appColors.surfaceVariant,
+                      child: Icon(
                         Icons.home,
-                        color: AppColors.outlineVariant,
+                        color: context.appColors.outlineVariant,
                         size: 40,
                       ),
                     ),
@@ -240,20 +240,20 @@ class _MapScreenState extends State<MapScreen> {
                       listing.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
-                        color: AppColors.textPrimary,
+                        color: context.appColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '${listing.city ?? ''}, ${listing.state ?? ''}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 12,
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -262,11 +262,11 @@ class _MapScreenState extends State<MapScreen> {
                       children: [
                         Text(
                           'RM${listing.monthlyRent.toStringAsFixed(0)}/mo',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'Manrope',
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
-                            color: AppColors.primary,
+                            color: context.appColors.primary,
                           ),
                         ),
                         // See Details button
@@ -281,7 +281,7 @@ class _MapScreenState extends State<MapScreen> {
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.primary,
+                              color: context.appColors.primary,
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Text(

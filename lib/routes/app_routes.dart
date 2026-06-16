@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import '../modules/account_nav/listing_members_screen.dart';
 import '../models/listing_model.dart';
 
 import '../core/services/auth_service.dart';
@@ -29,6 +30,11 @@ import '../modules/chat/chat_screen.dart';
 import '../modules/chat/chat_inbox_screen.dart';
 import '../shared/widgets/main_screen.dart';
 
+import '../modules/listings/owner_list_profile_screen.dart';
+import '../modules/account_nav/personal_info_screen.dart';
+import '../modules/account_nav/security_screen.dart';
+import '../modules/account_nav/notifications_screen.dart';
+
 /// Data class passed as [extra] to the /chat route.
 class ChatArgs {
   final String receiverId;
@@ -58,7 +64,8 @@ class AppRoutes {
         // Routes that unauthenticated users can access
         final isGuestAllowed = isAuthRoute || state.matchedLocation == '/home';
 
-        if (authService.isPasswordRecoveryMode && state.matchedLocation != '/update-password') {
+        if (authService.isPasswordRecoveryMode &&
+            state.matchedLocation != '/update-password') {
           return '/update-password';
         }
 
@@ -116,22 +123,6 @@ class AppRoutes {
                       path: 'listings', // /home/listings — listing list
                       builder: (context, state) => ListingListScreen(
                         initialSearchQuery: state.extra as String?,
-                      ),
-                    ),
-                    GoRoute(
-                      path: 'listings/detail', // /home/listings/detail
-                      builder: (context, state) => ListingDetailScreen(
-                        listing: state.extra as ListingModel?,
-                      ),
-                    ),
-                    GoRoute(
-                      path: 'listings/create', // /home/listings/create
-                      builder: (context, state) => const CreateListingScreen(),
-                    ),
-                    GoRoute(
-                      path: 'listings/edit', // /home/listings/edit
-                      builder: (context, state) => EditListingScreen(
-                        listing: state.extra as ListingModel,
                       ),
                     ),
                   ],
@@ -202,6 +193,46 @@ class AppRoutes {
               listingTitle: args.listingTitle,
             );
           },
+        ),
+        GoRoute(
+          path: '/home/owner-profile/:ownerId',
+          builder: (context, state) =>
+              OwnerProfileScreen(ownerId: state.pathParameters['ownerId']!),
+        ),
+        GoRoute(
+          path: '/notifications',
+          builder: (context, state) => const NotificationsScreen(),
+        ),
+        GoRoute(
+          path: '/personal-info',
+          builder: (context, state) => const PersonalInfoScreen(),
+        ),
+        GoRoute(
+          path: '/security',
+          builder: (context, state) => const SecurityScreen(),
+        ),
+        GoRoute(
+          path: '/manage-listing',
+          builder: (context, state) => const ManageListingScreen(),
+        ),
+        GoRoute(
+          path: '/manage-members',
+          builder: (context, state) =>
+              ListingMembersScreen(listing: state.extra as ListingModel),
+        ),
+        GoRoute(
+          path: '/home/listings/detail',
+          builder: (context, state) =>
+              ListingDetailScreen(listing: state.extra as ListingModel?),
+        ),
+        GoRoute(
+          path: '/home/listings/create',
+          builder: (context, state) => const CreateListingScreen(),
+        ),
+        GoRoute(
+          path: '/home/listings/edit',
+          builder: (context, state) =>
+              EditListingScreen(listing: state.extra as ListingModel),
         ),
       ],
     );

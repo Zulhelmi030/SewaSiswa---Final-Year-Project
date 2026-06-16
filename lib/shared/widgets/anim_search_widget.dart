@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 class AnimSearchBar extends StatefulWidget {
   ///  width - double ,isRequired : Yes
   ///  textController - TextEditingController  ,isRequired : Yes
@@ -280,7 +280,7 @@ class _AnimSearchBarState extends State<AnimSearchBar>
                       floatingLabelBehavior: FloatingLabelBehavior.never,
                       labelText: widget.helpText,
                       labelStyle: TextStyle(
-                        color: Color(0xff5B5B5B),
+                        color: context.appColors.onSurfaceVariant,
                         fontSize: 17.0,
                         fontWeight: FontWeight.w500,
                       ),
