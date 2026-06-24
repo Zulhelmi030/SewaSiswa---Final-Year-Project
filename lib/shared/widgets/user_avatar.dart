@@ -5,11 +5,7 @@ class UserAvatar extends StatelessWidget {
   final String? imageUrl;
   final double radius;
 
-  const UserAvatar({
-    super.key,
-    this.imageUrl,
-    this.radius = 40,
-  });
+  const UserAvatar({super.key, this.imageUrl, this.radius = 40});
 
   @override
   Widget build(BuildContext context) {
@@ -21,9 +17,10 @@ class UserAvatar extends StatelessWidget {
         shape: BoxShape.circle,
         image: imageUrl != null
             ? DecorationImage(
-                image: NetworkImage(imageUrl!),
-                fit: BoxFit.cover,
-              )
+                image: NetworkImage(imageUrl!.replaceAll(
+                    'api.dicebear.com/7.x/avataaars/svg',
+                    'api.dicebear.com/7.x/avataaars/png')),
+                fit: BoxFit.cover)
             : null,
       ),
       child: imageUrl == null

@@ -271,9 +271,9 @@ class _AnimSearchBarState extends State<AnimSearchBar>
                       });
                     },
 
-                    ///style is of type TextStyle, the default is just a color black
-                    style: widget.style ?? const TextStyle(color: Colors.black),
-                    cursorColor: Colors.black,
+                    ///style is of type TextStyle, the default is textPrimary
+                    style: widget.style ?? TextStyle(color: context.appColors.textPrimary),
+                    cursorColor: context.appColors.primary,
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.only(bottom: 5),
                       isDense: true,

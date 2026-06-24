@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../shared/widgets/listing_card.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/skeletons.dart';
@@ -18,12 +19,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<ListingModel> _hotListings = [];
+  Set<String> _wishlistedIds = {};
   bool _isLoadingListings = true;
 
   @override
   void initState() {
     super.initState();
     _fetchHotListings();
+    _fetchWishlistStatus();
   }
 
   Future<void> _fetchHotListings() async {
@@ -34,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
           .select('*, listing_photos(photo_url)')
           .eq('status', 'available')
           .order('created_at', ascending: false)
-          .limit(10);
+          .limit(3);
       final fetched = (response as List<dynamic>)
           .map((json) => ListingModel.fromJson(json as Map<String, dynamic>))
           .toList();
@@ -46,6 +49,66 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } catch (e) {
       if (mounted) setState(() => _isLoadingListings = false);
+    }
+  }
+
+  Future<void> _fetchWishlistStatus() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+    try {
+      final rows = await Supabase.instance.client
+          .from('wishlists')
+          .select('listing_id')
+          .eq('user_id', userId);
+      if (mounted) {
+        setState(() {
+          _wishlistedIds = (rows as List<dynamic>)
+              .map((r) => r['listing_id'] as String)
+              .toSet();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching wishlist status: $e');
+    }
+  }
+
+  Future<void> _toggleWishlist(String listingId) async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+    final isCurrentlyWishlisted = _wishlistedIds.contains(listingId);
+    // Optimistic update
+    setState(() {
+      if (isCurrentlyWishlisted) {
+        _wishlistedIds.remove(listingId);
+      } else {
+        _wishlistedIds.add(listingId);
+      }
+    });
+    try {
+      if (isCurrentlyWishlisted) {
+        await Supabase.instance.client
+            .from('wishlists')
+            .delete()
+            .eq('user_id', userId)
+            .eq('listing_id', listingId);
+      } else {
+        await Supabase.instance.client.from('wishlists').insert({
+          'user_id': userId,
+          'listing_id': listingId,
+        });
+      }
+    } catch (e) {
+      debugPrint('Error toggling wishlist: $e');
+      // Revert optimistic update on error
+      if (mounted) {
+        setState(() {
+          if (isCurrentlyWishlisted) {
+            _wishlistedIds.add(listingId);
+          } else {
+            _wishlistedIds.remove(listingId);
+          }
+        });
+      }
     }
   }
 
@@ -207,6 +270,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                     width: 280,
                                     child: ListingCard(
                                       listing: _hotListings[index],
+                                      isWishlisted: _wishlistedIds.contains(
+                                        _hotListings[index].id,
+                                      ),
+                                      onWishlistToggle: () => _toggleWishlist(
+                                        _hotListings[index].id,
+                                      ),
+                                      onTap: () => context.push(
+                                        '/home/listings/detail',
+                                        extra: _hotListings[index],
+                                      ),
                                     ),
                                   ),
                                 );
@@ -215,25 +288,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
                 ),
-              ),
-            ),
-
-            // 3. Categories Grid
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 1.1,
-                ),
-                delegate: SliverChildListDelegate([
-                  _buildCategoryCard('Private Studios', Icons.business_rounded),
-                  _buildCategoryCard('Shared Houses', Icons.groups_rounded),
-                  _buildCategoryCard('Campus Nearby', Icons.school_rounded),
-                  _buildCategoryCard('Eco-Energy', Icons.bolt_rounded),
-                ]),
               ),
             ),
 
@@ -268,7 +322,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         'Find students with similar vibes and courses to share your space.',
                         style: context.appTextStyles.bodySmall.copyWith(
-                          color: context.appColors.onPrimaryContainer.withValues(alpha: 0.7),
+                          color: context.appColors.onPrimaryContainer
+                              .withValues(alpha: 0.7),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -276,7 +331,25 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: 160,
                         child: CustomButton(
                           text: 'Join Community',
-                          onPressed: () {},
+                          onPressed: () async {
+                            final uri = Uri.parse(
+                              'https://t.me/+LNeT0QRTlV83OGI9',
+                            );
+                            if (!await launchUrl(
+                              uri,
+                              mode: LaunchMode.externalApplication,
+                            )) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Could not open Telegram. Please install Telegram and try again.',
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                          },
                           isOutlined: true,
                         ),
                       ),
@@ -345,7 +418,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCategoryCard(String title, IconData icon) {
+  /*Widget _buildCategoryCard(String title, IconData icon) {
     return Container(
       decoration: BoxDecoration(
         color: context.appColors.surfaceContainerLow,
@@ -368,4 +441,5 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+*/
 }

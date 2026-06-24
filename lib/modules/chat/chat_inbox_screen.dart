@@ -171,7 +171,9 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
         backgroundColor: context.appColors.surfaceContainerLowest,
         title: Text(
           "Messages",
-          style: context.appTextStyles.titleLarge.copyWith(fontWeight: FontWeight.bold),
+          style: context.appTextStyles.titleLarge.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: false,
         elevation: 0,
@@ -191,13 +193,18 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.chat_bubble_outline,
-                size: 64, color: context.appColors.outlineVariant),
+            Icon(
+              Icons.chat_bubble_outline,
+              size: 64,
+              color: context.appColors.outlineVariant,
+            ),
             const SizedBox(height: 16),
             Text(
               "No messages yet",
               style: context.appTextStyles.titleMedium.copyWith(
-                  color: context.appColors.textSecondary, fontWeight: FontWeight.bold),
+                color: context.appColors.textSecondary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -270,11 +277,12 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                             Expanded(
                               child: Text(
                                 convo['other_user_name'],
-                                style: context.appTextStyles.titleMedium.copyWith(
-                                  fontWeight: hasUnread
-                                      ? FontWeight.bold
-                                      : FontWeight.w600,
-                                ),
+                                style: context.appTextStyles.titleMedium
+                                    .copyWith(
+                                      fontWeight: hasUnread
+                                          ? FontWeight.bold
+                                          : FontWeight.w600,
+                                    ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -298,14 +306,15 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                             Expanded(
                               child: Text(
                                 convo['latest_message'],
-                                style: context.appTextStyles.bodyMedium.copyWith(
-                                  color: hasUnread
-                                      ? context.appColors.textPrimary
-                                      : context.appColors.textSecondary,
-                                  fontWeight: hasUnread
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
+                                style: context.appTextStyles.bodyMedium
+                                    .copyWith(
+                                      color: hasUnread
+                                          ? context.appColors.textPrimary
+                                          : context.appColors.textSecondary,
+                                      fontWeight: hasUnread
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -327,7 +336,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                                   ),
                                 ),
                               ),
-                            ]
+                            ],
                           ],
                         ),
                       ],

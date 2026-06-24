@@ -1,15 +1,25 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:finalyearproject/routes/app_routes.dart';
 import 'package:finalyearproject/core/services/auth_service.dart';
+import 'package:finalyearproject/core/services/push_notification_service.dart';
 import 'package:finalyearproject/core/styles/app_theme.dart';
 
 import 'package:flutter_stripe/flutter_stripe.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase (with try-catch to prevent crash if google-services.json is missing/invalid)
+  try {
+    await Firebase.initializeApp();
+    await PushNotificationService.initialize();
+  } catch (e) {
+    debugPrint('Firebase initialization error: $e');
+  }
 
   // Load environment variables
   await dotenv.load(fileName: ".env");

@@ -57,7 +57,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } on AuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: context.appColors.error),
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: context.appColors.error,
+          ),
         );
       }
     } catch (e) {

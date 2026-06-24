@@ -46,6 +46,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
   final _rentController = TextEditingController();
   final _depositController = TextEditingController();
   final _rulesController = TextEditingController();
+  final _dueDayController = TextEditingController(text: '1');
 
   late final ImageService _imageService;
 
@@ -66,6 +67,30 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
     super.initState();
     _imageService = ImageService(_client);
     _loadStateCityData();
+    _fetchUserData();
+  }
+
+  bool _isCurrentlyRenting = false;
+
+  Future<void> _fetchUserData() async {
+    final user = _client.auth.currentUser;
+    if (user == null) return;
+    try {
+      // Check if user is an active tenant in any house
+      final tenantResponse = await _client
+          .from('rental_tenants')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('status', 'active');
+
+      if (mounted) {
+        setState(() {
+          _isCurrentlyRenting = (tenantResponse as List).isNotEmpty;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching user data: $e');
+    }
   }
 
   @override
@@ -77,6 +102,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
     _rentController.dispose();
     _depositController.dispose();
     _rulesController.dispose();
+    _dueDayController.dispose();
     super.dispose();
   }
 
@@ -201,6 +227,13 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
       );
       return;
     }
+    final dueDay = int.tryParse(_dueDayController.text.trim());
+    if (dueDay == null || dueDay < 1 || dueDay > 28) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid due day (1-28).')),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -217,7 +250,9 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
       // Upload images if any
       List<String> imageUrls = [];
       if (_selectedImages.isNotEmpty) {
+        debugPrint('Starting upload of ${_selectedImages.length} images...');
         imageUrls = await _imageService.uploadMultipleImages(_selectedImages);
+        debugPrint('Successfully uploaded ${imageUrls.length} images. URLs: $imageUrls');
       }
 
       // Insert the housemate listing
@@ -237,6 +272,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
             'longitude': _longitude ?? 0.0,
             'monthly_rent': rent,
             'deposit': double.tryParse(_depositController.text.trim()),
+            'due_day': dueDay,
             'house_rule': _rulesController.text.trim().isEmpty
                 ? null
                 : _rulesController.text.trim(),
@@ -253,13 +289,18 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
           .single();
 
       final listingId = response['id'] as String;
+      debugPrint('Listing inserted successfully. ID: $listingId');
 
       // Save photo URLs to listing_photos table
       if (imageUrls.isNotEmpty) {
+        debugPrint('Saving photo URLs to listing_photos table...');
         final photoRows = imageUrls
             .map((url) => {'listing_id': listingId, 'photo_url': url})
             .toList();
         await _client.from('listing_photos').insert(photoRows);
+        debugPrint('Photo URLs saved successfully.');
+      } else {
+        debugPrint('No image URLs to save.');
       }
 
       // Only add the creator as a tenant if they chose to live there
@@ -301,6 +342,12 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
         .select('global_role')
         .eq('id', user.id);
     final role = response.first['global_role'] as String?;
+    
+    // If the user is going to be a tenant in this house, do not promote them to landlord.
+    if (_includeAsTenant && (role == 'tenant' || role == 'house_leader')) {
+      return;
+    }
+
     // Promote to landlord if not already — posting a listing = landlord
     if (role != 'landlord') {
       await Supabase.instance.client
@@ -309,8 +356,6 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
           .eq('id', user.id);
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -433,7 +478,11 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
                 color: Colors.white70,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.close, size: 20, color: context.appColors.error),
+              child: Icon(
+                Icons.close,
+                size: 20,
+                color: context.appColors.error,
+              ),
             ),
           ),
         ),
@@ -509,7 +558,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
             children: [
               Expanded(
                 child: _buildTextField(
-                  label: 'Monthly Rent (per person)',
+                  label: 'Total Monthly Rent',
                   placeholder: '0.00',
                   prefixText: 'RM ',
                   controller: _rentController,
@@ -526,6 +575,17 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
                   keyboardType: TextInputType.number,
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildTextField(
+            label: 'Rent Due Day (1-28)',
+            placeholder: 'e.g. 1 (for the 1st of every month)',
+            controller: _dueDayController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              NumericalRangeFormatter(min: 1, max: 28),
             ],
           ),
 
@@ -572,7 +632,9 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
       decoration: BoxDecoration(
         color: _includeAsTenant
             ? context.appColors.primary.withValues(alpha: 0.08)
-            : context.appColors.surfaceContainerHigh,
+            : (_isCurrentlyRenting 
+                ? context.appColors.surfaceContainerHigh.withValues(alpha: 0.5) 
+                : context.appColors.surfaceContainerHigh),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: _includeAsTenant
@@ -583,7 +645,9 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
       ),
       child: CheckboxListTile(
         value: _includeAsTenant,
-        onChanged: (val) => setState(() => _includeAsTenant = val ?? false),
+        onChanged: _isCurrentlyRenting 
+            ? null 
+            : (val) => setState(() => _includeAsTenant = val ?? false),
         activeColor: context.appColors.primary,
         checkboxShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(6),
@@ -592,13 +656,17 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
           'Include me as a tenant',
           style: context.appTextStyles.bodyMedium.copyWith(
             fontWeight: FontWeight.w600,
-            color: context.appColors.textPrimary,
+            color: _isCurrentlyRenting 
+                ? context.appColors.textSecondary 
+                : context.appColors.textPrimary,
           ),
         ),
         subtitle: Text(
-          _includeAsTenant
-              ? 'You will be listed as a tenant living in this house'
-              : 'You are the house owner — you will not be listed as a tenant',
+          _isCurrentlyRenting
+              ? 'You are already an active tenant in another house'
+              : (_includeAsTenant
+                  ? 'You will be listed as a tenant living in this house'
+                  : 'You are the house owner — you will not be listed as a tenant'),
           style: context.appTextStyles.bodySmall.copyWith(
             color: _includeAsTenant
                 ? context.appColors.primary
@@ -620,7 +688,9 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
       decoration: BoxDecoration(
         color: context.appColors.primaryFixed.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.appColors.primary.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: context.appColors.primary.withValues(alpha: 0.2),
+        ),
       ),
       child: Column(
         children: [
@@ -796,6 +866,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
     String? prefixText,
     TextEditingController? controller,
     TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -812,6 +883,7 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
           controller: controller,
           maxLines: maxLines,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
           decoration: InputDecoration(
             hintText: placeholder,
             prefixText: prefixText,
@@ -830,7 +902,10 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: context.appColors.primary, width: 2),
+              borderSide: BorderSide(
+                color: context.appColors.primary,
+                width: 2,
+              ),
             ),
           ),
         ),
@@ -851,10 +926,13 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
+          isExpanded: true,
           initialValue: _selectedState,
           hint: Text(
             'Select a state',
-            style: context.appTextStyles.bodyMedium.copyWith(color: context.appColors.outline),
+            style: context.appTextStyles.bodyMedium.copyWith(
+              color: context.appColors.outline,
+            ),
           ),
           items: _stateCityMap.keys
               .map(
@@ -884,7 +962,10 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: context.appColors.primary, width: 2),
+              borderSide: BorderSide(
+                color: context.appColors.primary,
+                width: 2,
+              ),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -912,10 +993,13 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
+          isExpanded: true,
           initialValue: _selectedCity,
           hint: Text(
             'Select a city',
-            style: context.appTextStyles.bodyMedium.copyWith(color: context.appColors.outline),
+            style: context.appTextStyles.bodyMedium.copyWith(
+              color: context.appColors.outline,
+            ),
           ),
           items: cities
               .map(
@@ -942,7 +1026,10 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: context.appColors.primary, width: 2),
+              borderSide: BorderSide(
+                color: context.appColors.primary,
+                width: 2,
+              ),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -977,7 +1064,9 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
                 selected: isSelected,
                 selectedColor: context.appColors.primary,
                 labelStyle: context.appTextStyles.labelMedium.copyWith(
-                  color: isSelected ? Colors.white : context.appColors.textPrimary,
+                  color: isSelected
+                      ? Colors.white
+                      : context.appColors.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
                 onSelected: (_) => setState(() => _selectedGender = option),
@@ -1001,11 +1090,15 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
           selectedColor: context.appColors.primary.withValues(alpha: 0.15),
           checkmarkColor: context.appColors.primary,
           labelStyle: context.appTextStyles.labelMedium.copyWith(
-            color: isSelected ? context.appColors.primary : context.appColors.textSecondary,
+            color: isSelected
+                ? context.appColors.primary
+                : context.appColors.textSecondary,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),
           side: BorderSide(
-            color: isSelected ? context.appColors.primary : context.appColors.outlineVariant,
+            color: isSelected
+                ? context.appColors.primary
+                : context.appColors.outlineVariant,
           ),
           onSelected: (selected) {
             setState(() {
@@ -1069,5 +1162,39 @@ class _HousematePostScreenState extends State<HousematePostScreen> {
         ),
       ),
     );
+  }
+}
+
+class NumericalRangeFormatter extends TextInputFormatter {
+  final int min;
+  final int max;
+
+  NumericalRangeFormatter({required this.min, required this.max});
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) {
+      return newValue;
+    }
+    final intValue = int.tryParse(newValue.text);
+    if (intValue == null) {
+      return oldValue;
+    }
+    if (intValue < min) {
+      return TextEditingValue(
+        text: min.toString(),
+        selection: TextSelection.collapsed(offset: min.toString().length),
+      );
+    }
+    if (intValue > max) {
+      return TextEditingValue(
+        text: max.toString(),
+        selection: TextSelection.collapsed(offset: max.toString().length),
+      );
+    }
+    return newValue;
   }
 }

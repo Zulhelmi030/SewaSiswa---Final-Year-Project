@@ -21,8 +21,9 @@ class ListingCardSkeleton extends StatelessWidget {
           children: [
             // Image placeholder
             ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
               child: Container(
                 height: 200,
                 width: double.infinity,
@@ -43,10 +44,7 @@ class ListingCardSkeleton extends StatelessWidget {
                   // Price row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Bone.text(words: 2),
-                      Bone.text(words: 2),
-                    ],
+                    children: [Bone.text(words: 2), Bone.text(words: 2)],
                   ),
                   const SizedBox(height: 12),
                   // Distance badge
@@ -85,8 +83,9 @@ class HorizontalListingCardSkeleton extends StatelessWidget {
           children: [
             // Image placeholder
             ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
               child: Container(
                 height: 200,
                 width: double.infinity,
@@ -172,8 +171,9 @@ class ManageListingCardSkeleton extends StatelessWidget {
           children: [
             // Photo
             ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
               child: Container(
                 height: 160,
                 width: double.infinity,

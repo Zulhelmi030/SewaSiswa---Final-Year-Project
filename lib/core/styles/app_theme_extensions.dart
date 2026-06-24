@@ -42,7 +42,7 @@ class ThemeColors {
   Color get background => _isDark ? AppDarkColors.background : AppColors.background;
   Color get surface => _isDark ? AppDarkColors.surface : AppColors.surface;
   Color get surfaceDim => AppColors.surfaceDim;
-  Color get surfaceBright => AppColors.surfaceBright;
+  Color get surfaceBright => _isDark ? AppDarkColors.surfaceContainerLow : AppColors.surfaceBright;
   Color get onSurface => _isDark ? AppDarkColors.onSurface : AppColors.onSurface;
   Color get onSurfaceVariant => _isDark ? AppDarkColors.onSurfaceVariant : AppColors.onSurfaceVariant;
   Color get inverseSurface => AppColors.inverseSurface;
@@ -51,9 +51,9 @@ class ThemeColors {
   Color get surfaceContainerLowest => _isDark ? AppDarkColors.surfaceContainerLowest : AppColors.surfaceContainerLowest;
   Color get surfaceContainerLow => _isDark ? AppDarkColors.surfaceContainerLow : AppColors.surfaceContainerLow;
   Color get surfaceContainer => _isDark ? AppDarkColors.surfaceContainer : AppColors.surfaceContainer;
-  Color get surfaceContainerHigh => AppColors.surfaceContainerHigh;
-  Color get surfaceContainerHighest => AppColors.surfaceContainerHighest;
-  Color get surfaceVariant => AppColors.surfaceVariant;
+  Color get surfaceContainerHigh => _isDark ? AppDarkColors.surfaceContainerHigh : AppColors.surfaceContainerHigh;
+  Color get surfaceContainerHighest => _isDark ? AppDarkColors.surfaceContainerHighest : AppColors.surfaceContainerHighest;
+  Color get surfaceVariant => _isDark ? AppDarkColors.surfaceVariant : AppColors.surfaceVariant;
   Color get surfaceTint => AppColors.surfaceTint;
   
   Color get outline => _isDark ? AppDarkColors.outline : AppColors.outline;

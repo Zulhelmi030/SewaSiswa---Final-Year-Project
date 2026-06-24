@@ -27,11 +27,24 @@ class _ListingListScreenState extends State<ListingListScreen> {
   double _maxDistanceKm = 5.0; // default radius shown in the slider
   bool _distanceFilterActive = false; // true once user confirms a distance
 
+  // Price filter state
+  double _minPrice = 100.0;
+  double _maxPrice = 3000.0;
+  bool _priceFilterActive = false;
+
+  // Gender filter state
+  String _selectedGender = 'Any';
+  bool _genderFilterActive = false;
+
+  // Slots filter state
+  int _selectedTotalSlots = 1; // min slots
+  bool _slotsFilterActive = false;
+
   List<ListingModel> _listings = [];
   bool _isLoading = true;
   String? _error;
 
-  final List<String> _filters = ['All', 'Price', 'Room', 'Distance', 'Rating'];
+  final List<String> _filters = ['All', 'Price', 'Gender', 'Distance', 'Slots'];
 
   @override
   void initState() {
@@ -41,6 +54,7 @@ class _ListingListScreenState extends State<ListingListScreen> {
       _searchController.text = widget.initialSearchQuery!;
     }
     _fetchListings();
+    _fetchWishlistStatus();
   }
 
   Future<void> _fetchListings() async {
@@ -84,15 +98,36 @@ class _ListingListScreenState extends State<ListingListScreen> {
       return matchesSearch;
     }).toList();
 
-    if (_selectedFilterIndex == 1) {
-      result = FilterByPriceService.filterByPrice(result, 1000, 2000);
+    // Apply price filter when the Price chip is active
+    if (_selectedFilterIndex == 1 && _priceFilterActive) {
+      result = FilterByPriceService.filterByPrice(result, _minPrice, _maxPrice);
       result = FilterByPriceService.sortListingByPrice(result);
+    }
+
+    // Apply gender filter when Gender chip is active
+    if (_selectedFilterIndex == 2 && _genderFilterActive && _selectedGender != 'Any') {
+      result = result.where((l) {
+        return l.genderPreference == _selectedGender || 
+               l.genderPreference == 'Any' || 
+               l.genderPreference == null;
+      }).toList();
     }
 
     // Apply distance filter when the Distance chip is active
     if (_selectedFilterIndex == 3 && _distanceFilterActive) {
       result = FilterByDistService.filterByDistance(result, _maxDistanceKm);
       result = FilterByDistService.sortByDistance(result);
+    }
+
+    // Apply slots filter when the Slots chip is active
+    if (_selectedFilterIndex == 4 && _slotsFilterActive) {
+      result = result.where((l) {
+        final slots = l.totalSlots ?? 0;
+        if (_selectedTotalSlots == 5) {
+          return slots >= 5;
+        }
+        return slots == _selectedTotalSlots;
+      }).toList();
     }
 
     return result;
@@ -103,35 +138,24 @@ class _ListingListScreenState extends State<ListingListScreen> {
     // Temporarily hold the slider value inside the sheet
     double tempDistance = _maxDistanceKm;
 
-    showModalBottomSheet<void>(
+    showDialog<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-              ),
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Handle bar
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: context.appColors.outlineVariant,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: StatefulBuilder(
+            builder: (context, setSheetState) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
 
                   // Title
                   Row(
@@ -312,19 +336,623 @@ class _ListingListScreenState extends State<ListingListScreen> {
               ),
             );
           },
+        ),
         );
       },
     );
   }
 
-  void _toggleWishlist(String listingId) {
+  void _showPriceSheet() {
+    double tempMinPrice = _minPrice;
+    double tempMaxPrice = _maxPrice;
+
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: StatefulBuilder(
+            builder: (context, setSheetState) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                  // Title
+                  Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: context.appColors.primary.withValues(
+                            alpha: 0.1,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.attach_money_rounded,
+                          color: context.appColors.primary,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Price Range',
+                            style: context.appTextStyles.titleMedium.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            'Filter by monthly rent',
+                            style: context.appTextStyles.bodySmall.copyWith(
+                              color: context.appColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 28),
+
+                  // Current value display
+                  Center(
+                    child: RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'RM ${tempMinPrice.toInt()} - RM ${tempMaxPrice.toInt()}',
+                            style: context.appTextStyles.displayLarge.copyWith(
+                              color: context.appColors.primary,
+                              fontSize: 32,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Range Slider
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: context.appColors.primary,
+                      inactiveTrackColor: context.appColors.primary.withValues(
+                        alpha: 0.15,
+                      ),
+                      thumbColor: context.appColors.primary,
+                      overlayColor: context.appColors.primary.withValues(
+                        alpha: 0.1,
+                      ),
+                      trackHeight: 6,
+                    ),
+                    child: RangeSlider(
+                      values: RangeValues(tempMinPrice, tempMaxPrice),
+                      min: 0,
+                      max: 5000,
+                      divisions: 100,
+                      onChanged: (values) {
+                        setSheetState(() {
+                          tempMinPrice = values.start;
+                          tempMaxPrice = values.end;
+                        });
+                      },
+                    ),
+                  ),
+
+                  // Min / Max labels
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'RM 0',
+                          style: context.appTextStyles.labelMedium.copyWith(
+                            color: context.appColors.textSecondary,
+                          ),
+                        ),
+                        Text(
+                          'RM 5000+',
+                          style: context.appTextStyles.labelMedium.copyWith(
+                            color: context.appColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+
+                  // Action buttons
+                  Row(
+                    children: [
+                      // Reset
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            setState(() {
+                              _minPrice = 100.0;
+                              _maxPrice = 3000.0;
+                              _priceFilterActive = false;
+                              _selectedFilterIndex = 0;
+                            });
+                            Navigator.pop(context);
+                          },
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            side: BorderSide(
+                              color: context.appColors.outlineVariant,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'Reset',
+                            style: context.appTextStyles.labelMedium.copyWith(
+                              color: context.appColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Apply
+                      Expanded(
+                        flex: 2,
+                        child: FilledButton(
+                          onPressed: () {
+                            setState(() {
+                              _minPrice = tempMinPrice;
+                              _maxPrice = tempMaxPrice;
+                              _priceFilterActive = true;
+                              _selectedFilterIndex = 1;
+                            });
+                            Navigator.pop(context);
+                          },
+                          style: FilledButton.styleFrom(
+                            backgroundColor: context.appColors.primary,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'Apply Filter',
+                            style: context.appTextStyles.labelMedium.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        );
+      },
+    );
+  }
+
+  void _showGenderSheet() {
+    String tempGender = _selectedGender;
+
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: StatefulBuilder(
+            builder: (context, setSheetState) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                  // Title
+                  Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: context.appColors.primary.withValues(
+                            alpha: 0.1,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.wc_rounded,
+                          color: context.appColors.primary,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Gender Preference',
+                            style: context.appTextStyles.titleMedium.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            'Filter by allowed gender',
+                            style: context.appTextStyles.bodySmall.copyWith(
+                              color: context.appColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 28),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: SegmentedButton<String>(
+                      segments: const [
+                        ButtonSegment(value: 'Any', label: Text('Any')),
+                        ButtonSegment(value: 'Male', label: Text('Male')),
+                        ButtonSegment(value: 'Female', label: Text('Female')),
+                      ],
+                      selected: {tempGender},
+                      onSelectionChanged: (Set<String> newSelection) {
+                        setSheetState(() {
+                          tempGender = newSelection.first;
+                        });
+                      },
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return context.appColors.primary;
+                          }
+                          return context.appColors.surfaceContainerHigh;
+                        }),
+                        foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return context.appColors.onPrimary;
+                          }
+                          return context.appColors.textPrimary;
+                        }),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 28),
+
+                  // Action buttons
+                  Row(
+                    children: [
+                      // Reset
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedGender = 'Any';
+                              _genderFilterActive = false;
+                              _selectedFilterIndex = 0;
+                            });
+                            Navigator.pop(context);
+                          },
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            side: BorderSide(
+                              color: context.appColors.outlineVariant,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'Reset',
+                            style: context.appTextStyles.labelMedium.copyWith(
+                              color: context.appColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Apply
+                      Expanded(
+                        flex: 2,
+                        child: FilledButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedGender = tempGender;
+                              _genderFilterActive = tempGender != 'Any';
+                              _selectedFilterIndex = 2;
+                            });
+                            Navigator.pop(context);
+                          },
+                          style: FilledButton.styleFrom(
+                            backgroundColor: context.appColors.primary,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'Apply Filter',
+                            style: context.appTextStyles.labelMedium.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        );
+      },
+    );
+  }
+
+  void _showSlotsSheet() {
+    int tempSlots = _selectedTotalSlots;
+
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: StatefulBuilder(
+            builder: (context, setSheetState) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: context.appColors.primary.withValues(
+                              alpha: 0.1,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.group_rounded,
+                            color: context.appColors.primary,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Total Slots',
+                              style: context.appTextStyles.titleMedium.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            Text(
+                              'Number of slots per house/room',
+                              style: context.appTextStyles.bodySmall.copyWith(
+                                color: context.appColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 28),
+
+                    // Segments
+                    SizedBox(
+                      width: double.infinity,
+                      child: SegmentedButton<int>(
+                        segments: const [
+                          ButtonSegment(
+                            value: 1,
+                            label: Text('1'),
+                          ),
+                          ButtonSegment(
+                            value: 2,
+                            label: Text('2'),
+                          ),
+                          ButtonSegment(
+                            value: 3,
+                            label: Text('3'),
+                          ),
+                          ButtonSegment(
+                            value: 4,
+                            label: Text('4'),
+                          ),
+                          ButtonSegment(
+                            value: 5,
+                            label: Text('5+'),
+                          ),
+                        ],
+                        selected: {tempSlots},
+                        onSelectionChanged: (Set<int> newSelection) {
+                          setSheetState(() {
+                            tempSlots = newSelection.first;
+                          });
+                        },
+                        style: ButtonStyle(
+                          backgroundColor: WidgetStateProperty.resolveWith((states) {
+                            if (states.contains(WidgetState.selected)) {
+                              return context.appColors.primary.withValues(alpha: 0.15);
+                            }
+                            return Colors.transparent;
+                          }),
+                          side: WidgetStateProperty.all(
+                            BorderSide(
+                              color: context.appColors.outlineVariant,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+
+                    // Action buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              setState(() {
+                                _slotsFilterActive = false;
+                                _selectedTotalSlots = 1; // reset
+                              });
+                              Navigator.pop(context);
+                            },
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              side: BorderSide(
+                                color: context.appColors.outlineVariant,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              'Clear',
+                              style: context.appTextStyles.labelMedium.copyWith(
+                                color: context.appColors.textSecondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () {
+                              setState(() {
+                                _slotsFilterActive = true;
+                                _selectedTotalSlots = tempSlots;
+                              });
+                              Navigator.pop(context);
+                            },
+                            style: FilledButton.styleFrom(
+                              backgroundColor: context.appColors.primary,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              'Apply Filter',
+                              style: context.appTextStyles.labelMedium.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _fetchWishlistStatus() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+    try {
+      final rows = await Supabase.instance.client
+          .from('wishlists')
+          .select('listing_id')
+          .eq('user_id', userId);
+      if (mounted) {
+        setState(() {
+          _wishlistIds
+            ..clear()
+            ..addAll(
+              (rows as List<dynamic>).map((r) => r['listing_id'] as String),
+            );
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching wishlist status: $e');
+    }
+  }
+
+  Future<void> _toggleWishlist(String listingId) async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+    final isCurrentlyWishlisted = _wishlistIds.contains(listingId);
+    // Optimistic update
     setState(() {
-      if (_wishlistIds.contains(listingId)) {
+      if (isCurrentlyWishlisted) {
         _wishlistIds.remove(listingId);
       } else {
         _wishlistIds.add(listingId);
       }
     });
+    try {
+      if (isCurrentlyWishlisted) {
+        await Supabase.instance.client
+            .from('wishlists')
+            .delete()
+            .eq('user_id', userId)
+            .eq('listing_id', listingId);
+      } else {
+        await Supabase.instance.client.from('wishlists').insert({
+          'user_id': userId,
+          'listing_id': listingId,
+        });
+      }
+    } catch (e) {
+      debugPrint('Error toggling wishlist: $e');
+      // Rollback on failure
+      if (mounted) {
+        setState(() {
+          if (isCurrentlyWishlisted) {
+            _wishlistIds.add(listingId);
+          } else {
+            _wishlistIds.remove(listingId);
+          }
+        });
+      }
+    }
   }
 
   void _showWishlistSheet() {
@@ -502,9 +1130,10 @@ class _ListingListScreenState extends State<ListingListScreen> {
                                         color: Colors.red,
                                         size: 20,
                                       ),
-                                      onPressed: () {
-                                        _toggleWishlist(l.id);
-                                        Navigator.pop(context);
+                                      onPressed: () async {
+                                        final nav = Navigator.of(context);
+                                        await _toggleWishlist(l.id);
+                                        nav.pop();
                                         if (_wishlistIds.isNotEmpty) {
                                           _showWishlistSheet();
                                         }
@@ -647,7 +1276,7 @@ class _ListingListScreenState extends State<ListingListScreen> {
                 padding: const EdgeInsets.fromLTRB(24, 16, 0, 0),
                 sliver: SliverToBoxAdapter(
                   child: SizedBox(
-                    height: 44,
+                    height: 52,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.only(right: 24),
@@ -655,26 +1284,46 @@ class _ListingListScreenState extends State<ListingListScreen> {
                       separatorBuilder: (_, _) => const SizedBox(width: 8),
                       itemBuilder: (context, index) {
                         final isSelected = _selectedFilterIndex == index;
-                        // Distance chip (index 3) opens the slider sheet
+                        final isPriceChip = index == 1;
+                        final isGenderChip = index == 2;
                         final isDistanceChip = index == 3;
+                        final isSlotsChip = index == 4;
+
+                        String? badgeText;
+                        if (isPriceChip && _priceFilterActive) {
+                          badgeText = 'RM ${_minPrice.toInt()} - ${_maxPrice.toInt()}';
+                        } else if (isGenderChip && _genderFilterActive) {
+                          badgeText = _selectedGender;
+                        } else if (isDistanceChip && _distanceFilterActive) {
+                          badgeText = '≤ ${_maxDistanceKm.toStringAsFixed(1)} km';
+                        } else if (isSlotsChip && _slotsFilterActive) {
+                          badgeText = _selectedTotalSlots == 5 ? '5+ slots' : '$_selectedTotalSlots slots';
+                        }
+
                         return _FilterChip(
                           label: _filters[index],
                           isSelected: isSelected,
-                          // Show the active km value on the Distance chip
-                          badge: isDistanceChip && _distanceFilterActive
-                              ? '≤ ${_maxDistanceKm.toStringAsFixed(1)} km'
-                              : null,
+                          badge: badgeText,
                           onTap: () {
-                            if (isDistanceChip) {
+                            if (isPriceChip) {
+                              setState(() => _selectedFilterIndex = index);
+                              _showPriceSheet();
+                            } else if (isGenderChip) {
+                              setState(() => _selectedFilterIndex = index);
+                              _showGenderSheet();
+                            } else if (isDistanceChip) {
                               setState(() => _selectedFilterIndex = index);
                               _showDistanceSheet();
+                            } else if (isSlotsChip) {
+                              setState(() => _selectedFilterIndex = index);
+                              _showSlotsSheet();
                             } else {
                               setState(() {
                                 _selectedFilterIndex = index;
-                                // Deactivate distance filter when leaving Distance chip
-                                if (_distanceFilterActive) {
-                                  _distanceFilterActive = false;
-                                }
+                                _priceFilterActive = false;
+                                _genderFilterActive = false;
+                                _distanceFilterActive = false;
+                                _slotsFilterActive = false;
                               });
                             }
                           },

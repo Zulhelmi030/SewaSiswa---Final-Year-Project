@@ -30,28 +30,40 @@ class ImageService {
       // Use milliseconds + random suffix to avoid filename collisions
       final random = Random().nextInt(999999).toString().padLeft(6, '0');
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_$random.webp';
-      final filePath = 'listings/$fileName';
-      final compressedImage = await compressImage(imageFile);
-      if (compressedImage == null) {
-        debugPrint('Error compressing image');
+      
+      final userId = _supabaseClient.auth.currentUser?.id;
+      if (userId == null) {
+        debugPrint('Error: User not logged in');
         return null;
       }
+      final filePath = '$userId/$fileName';
+      debugPrint('Uploading image: ${imageFile.path}');
+      final compressedImage = await compressImage(imageFile);
+      if (compressedImage == null) {
+        debugPrint('Error compressing image: returned null');
+        return null;
+      }
+      debugPrint('Compressed image size: ${compressedImage.lengthInBytes} bytes');
 
-      await _supabaseClient.storage
+      final uploadPath = await _supabaseClient.storage
           .from(_bucketName)
           .uploadBinary(
             filePath,
             compressedImage,
             fileOptions: const FileOptions(contentType: 'image/webp'),
           );
+      debugPrint('Supabase upload successful. Path: $uploadPath');
 
       final publicUrl = _supabaseClient.storage
           .from(_bucketName)
           .getPublicUrl(filePath);
+      
+      debugPrint('Generated public URL: $publicUrl');
 
       return publicUrl;
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('Error uploading image: $e');
+      debugPrint('Stacktrace: $stackTrace');
       return null;
     }
   }
@@ -81,15 +93,23 @@ class ImageService {
         contentType = 'image/webp';
       }
 
+      final userId = _supabaseClient.auth.currentUser?.id;
+      if (userId == null) {
+        debugPrint('Error: User not logged in');
+        return null;
+      }
+      
+      final filePath = '$userId/$fileName';
+
       await _supabaseClient.storage
           .from('receipts')
           .uploadBinary(
-            fileName,
+            filePath,
             bytesToUpload,
             fileOptions: FileOptions(contentType: contentType),
           );
 
-      return _supabaseClient.storage.from('receipts').getPublicUrl(fileName);
+      return _supabaseClient.storage.from('receipts').getPublicUrl(filePath);
     } catch (e) {
       debugPrint('Error uploading receipt: $e');
       return null;

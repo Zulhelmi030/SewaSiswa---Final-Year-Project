@@ -67,20 +67,19 @@ class _ChatScreenState extends State<ChatScreen> {
     if (_currentUserId == null) return;
 
     try {
-      // Fetch all messages exchanged between the two users for this listing.
-      final query = _client
+      var query = _client
           .from('messages')
           .select()
           .or(
             'and(sender_id.eq.$_currentUserId,receiver_id.eq.${widget.receiverId}),'
             'and(sender_id.eq.${widget.receiverId},receiver_id.eq.$_currentUserId)',
-          )
-          .order('sent_at', ascending: true);
+          );
 
-      // If a listing context exists, filter by it.
-      final response = widget.listingId != null
-          ? await (query as dynamic).eq('listing_id', widget.listingId)
-          : await query;
+      if (widget.listingId != null) {
+        query = query.eq('listing_id', widget.listingId!);
+      }
+
+      final response = await query.order('sent_at', ascending: true);
 
       if (mounted) {
         setState(() {
@@ -96,18 +95,79 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  /// Re-fetches messages newer than the latest one we already have.
+  /// Called on every Realtime INSERT event — we ignore the payload entirely
+  /// and go straight to the DB with our own credentials, so RLS always works.
+  Future<void> _fetchNewMessages() async {
+    debugPrint('ChatScreen: _fetchNewMessages triggered'); // add this
+    if (_currentUserId == null || !mounted) return;
+
+    try {
+      // Find the timestamp of the newest message we already hold.
+      final knownMessages = _messages
+          .where((m) => m['_optimistic'] != true)
+          .toList();
+      final lastTimestamp = knownMessages.isNotEmpty
+          ? knownMessages.last['sent_at'] as String
+          : '1970-01-01T00:00:00Z';
+
+      var query = _client
+          .from('messages')
+          .select()
+          .or(
+            'and(sender_id.eq.$_currentUserId,receiver_id.eq.${widget.receiverId}),'
+            'and(sender_id.eq.${widget.receiverId},receiver_id.eq.$_currentUserId)',
+          )
+          .gt('sent_at', lastTimestamp);
+
+      if (widget.listingId != null) {
+        query = query.eq('listing_id', widget.listingId!);
+      }
+
+      final newRows = await query.order('sent_at', ascending: true);
+      final incoming = List<Map<String, dynamic>>.from(newRows as List);
+
+      if (!mounted || incoming.isEmpty) return;
+
+      setState(() {
+        // Remove any optimistic placeholders.
+        _messages.removeWhere((m) => m['_optimistic'] == true);
+        // Add only messages we don't already have.
+        for (final row in incoming) {
+          if (!_messages.any((m) => m['id'] == row['id'])) {
+            _messages.add(row);
+            // Auto-mark as read if we are the receiver.
+            if (row['sender_id'] != _currentUserId) {
+              _markSingleAsRead(row['id'] as String);
+            }
+          }
+        }
+      });
+      _scrollToBottom();
+    } catch (e) {
+      debugPrint('ChatScreen: _fetchNewMessages error: $e');
+    }
+  }
+
   // ── WebSocket: Supabase Realtime Subscription ────────────────────────────
 
-  /// Opens a WebSocket channel and listens for new INSERT events on the
-  /// messages table. This is the core real-time / WebSocket functionality.
-  /// handle incoming messages from other users.
+  /// Opens a WebSocket channel and listens for INSERT events.
+  /// We intentionally ignore the payload entirely and call _fetchNewMessages()
+  /// instead, so we never depend on payload.newRecord being populated (which
+  /// fails silently with RLS). The DB query uses the user's own JWT, so
+  /// RLS always returns the correct rows for both sender and receiver.
   void _subscribeToRealtime() {
     if (_currentUserId == null) return;
 
-    // Create a uniquely named channel for this conversation.
+    // Sort IDs so both participants always produce the same channel name.
+    final ids = [_currentUserId!, widget.receiverId]..sort();
     final channelName =
-        'chat:${_currentUserId}_${widget.receiverId}'
+        'chat:${ids[0]}_${ids[1]}'
         '${widget.listingId != null ? '_${widget.listingId}' : ''}';
+
+    debugPrint('ChatScreen: subscribing to channel: $channelName');
+    debugPrint('ChatScreen: currentUserId: $_currentUserId');
+    debugPrint('ChatScreen: receiverId: ${widget.receiverId}');
 
     _channel = _client
         .channel(channelName)
@@ -116,23 +176,8 @@ class _ChatScreenState extends State<ChatScreen> {
           schema: 'public',
           table: 'messages',
           callback: (payload) {
-            final newMsg = payload.newRecord;
-            // Only handle messages that belong to this conversation.
-            final sender = newMsg['sender_id'] as String?;
-            final receiver = newMsg['receiver_id'] as String?;
-            final isRelevant =
-                (sender == _currentUserId && receiver == widget.receiverId) ||
-                (sender == widget.receiverId && receiver == _currentUserId);
-
-            if (!isRelevant || !mounted) return;
-
-            setState(() => _messages.add(newMsg));
-            _scrollToBottom();
-
-            // Mark as read if received (not sent by us).
-            if (sender != _currentUserId) {
-              _markSingleAsRead(newMsg['id'] as String);
-            }
+            debugPrint('ChatScreen: INSERT event received, calling _fetchNewMessages');
+            _fetchNewMessages();
           },
         )
         .subscribe((status, [error]) {
@@ -175,6 +220,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
       await _client.from('messages').insert(payload);
 
+      // Notify the receiver — fire-and-forget so it doesn't block the UI.
+      _sendMessageNotification(content);
+
       // Remove the optimistic message — the Realtime subscription will
       // receive the real row and add it automatically.
       if (mounted) {
@@ -198,6 +246,38 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     } finally {
       if (mounted) setState(() => _isSending = false);
+    }
+  }
+
+  /// Inserts a notification for the receiver after a message is sent.
+  /// Fire-and-forget — errors are logged but do not surface to the user.
+  Future<void> _sendMessageNotification(String messageContent) async {
+    try {
+      // Get the sender's display name from the users table.
+      final senderData = await _client
+          .from('users')
+          .select('full_name')
+          .eq('id', _currentUserId!)
+          .maybeSingle();
+
+      final senderName =
+          senderData?['full_name'] as String? ?? 'Someone';
+
+      // Truncate message body for the notification preview.
+      final preview = messageContent.length > 60
+          ? '${messageContent.substring(0, 60)}…'
+          : messageContent;
+
+      await _client.from('notifications').insert({
+        'user_id': widget.receiverId,
+        'title': 'New message from $senderName',
+        'body': preview,
+        'type': 'message',
+        'is_read': false,
+        if (widget.listingId != null) 'related_id': widget.listingId,
+      });
+    } catch (e) {
+      debugPrint('ChatScreen: notification error: $e');
     }
   }
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../shared/widgets/user_avatar.dart';
+import '../../core/styles/app_theme_extensions.dart';
 import 'package:go_router/go_router.dart';
-import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -15,6 +15,7 @@ class _AccountScreenState extends State<AccountScreen> {
   String _email = '';
   String _displayName = '';
   String? _avatarUrl;
+  String? _globalRole;
 
   @override
   void initState() {
@@ -31,7 +32,7 @@ class _AccountScreenState extends State<AccountScreen> {
         // Fetch the avatar URL from our public.users table
         final userData = await client
             .from('users')
-            .select('avatar_url')
+            .select('avatar_url, global_role')
             .eq('id', user.id)
             .single();
         if (mounted) {
@@ -43,6 +44,7 @@ class _AccountScreenState extends State<AccountScreen> {
               _displayName = email.split('@').first;
             }
             _avatarUrl = userData['avatar_url'] as String?;
+            _globalRole = userData['global_role'] as String?;
           });
         }
       } catch (e) {
@@ -151,6 +153,11 @@ class _AccountScreenState extends State<AccountScreen> {
                 ),
 
                 _buildMenuItem(
+                  Icons.chat_bubble_outline_rounded,
+                  "Messages",
+                  onTap: () => context.push('/chat/inbox'),
+                ),
+                _buildMenuItem(
                   Icons.notifications_none_rounded,
                   "Notifications",
                   onTap: () => context.push('/notifications'),
@@ -161,27 +168,29 @@ class _AccountScreenState extends State<AccountScreen> {
                   onTap: () => context.push('/security'),
                 ),
 
-                const SizedBox(height: 32),
-                Text(
-                  "HOSTING",
-                  style: context.appTextStyles.labelMedium.copyWith(
-                    letterSpacing: 2,
-                    color: context.appColors.primary.withValues(alpha: 0.4),
+                if (_globalRole == 'owner' || _globalRole == 'landlord') ...[
+                  const SizedBox(height: 32),
+                  Text(
+                    "HOSTING",
+                    style: context.appTextStyles.labelMedium.copyWith(
+                      letterSpacing: 2,
+                      color: context.appColors.primary.withValues(alpha: 0.4),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                _buildMenuItem(
-                  Icons.home_work_outlined,
-                  "Manage Listings",
-                  onTap: () => context.push('/manage-listings'),
-                ),
-                _buildMenuItem(
-                  Icons.analytics_outlined,
-                  "Earnings Report",
-                  onTap: () => context.push('/earnings-report'),
-                ),
+                  const SizedBox(height: 16),
+                  _buildMenuItem(
+                    Icons.home_work_outlined,
+                    "Manage Listings",
+                    onTap: () => context.push('/manage-listings'),
+                  ),
+                  _buildMenuItem(
+                    Icons.analytics_outlined,
+                    "Earnings Report",
+                    onTap: () => context.push('/earnings-report'),
+                  ),
+                ],
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 100),
               ],
             ),
           ),

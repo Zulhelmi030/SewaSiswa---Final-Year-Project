@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 
@@ -15,9 +16,33 @@ class AuthService extends ChangeNotifier {
       if (data.event == AuthChangeEvent.passwordRecovery) {
         isPasswordRecoveryMode = true;
       }
+      if (data.event == AuthChangeEvent.signedIn || data.event == AuthChangeEvent.initialSession) {
+        _setupPushNotifications();
+      }
       notifyListeners();
     });
   }
+
+  Future<void> _setupPushNotifications() async {
+    if (kIsWeb) return; // FCM token generation typically differs/fails on web depending on setup
+
+    try {
+      final messaging = FirebaseMessaging.instance;
+      
+      // Request permission (required for iOS, mostly a no-op on Android depending on version)
+      final settings = await messaging.requestPermission();
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        final token = await messaging.getToken();
+        if (token != null && currentUser != null) {
+          // Save the token to the users table
+          await _supabase.from('users').update({'fcm_token': token}).eq('id', currentUser!.id);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error setting up push notifications: $e');
+    }
+  }
+
 
   void clearPasswordRecoveryMode() {
     isPasswordRecoveryMode = false;

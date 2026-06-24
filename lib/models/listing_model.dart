@@ -160,13 +160,20 @@ class ListingModel {
     return totalSlots! - occupiedSlots!;
   }
 
-  /// Display address combining address + city + state
+  /// Display address combining address + postcode + city + state smartly
   String get fullAddress {
-    final parts = [
-      address,
-      city,
-      state,
-    ].where((p) => p != null && p.isNotEmpty).toList();
+    List<String> parts = [address];
+    
+    if (postcode != null && postcode!.isNotEmpty && !address.contains(postcode!)) {
+      parts.add(postcode!);
+    }
+    if (city != null && city!.isNotEmpty && !address.toLowerCase().contains(city!.toLowerCase())) {
+      parts.add(city!);
+    }
+    if (state != null && state!.isNotEmpty && !address.toLowerCase().contains(state!.toLowerCase())) {
+      parts.add(state!);
+    }
+    
     return parts.join(', ');
   }
 

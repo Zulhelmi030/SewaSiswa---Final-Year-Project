@@ -50,9 +50,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         'id': user.id,
         'full_name': _fullNameController.text.trim(),
         'email': user.email ?? '',
-        'phone': _phoneController.text.trim(),
-        'role': 'guest', // all users start as guest; role is updated by actions
-        'rating_average': 0.0,
+        'phone_number': _phoneController.text.trim(),
+        'global_role': 'guest', // all users start as guest; role is updated by actions
         'created_at': DateTime.now().toIso8601String(),
       });
 

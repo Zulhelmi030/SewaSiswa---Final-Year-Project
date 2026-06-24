@@ -85,7 +85,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
             obscureText: widget.isPassword ? _obscureText : false,
             keyboardType: widget.keyboardType,
             validator: widget.validator,
-            style: context.appTextStyles.bodyMedium,
+            style: context.appTextStyles.bodyMedium.copyWith(
+              color: context.appColors.textPrimary,
+            ),
             decoration: InputDecoration(
               hintText: widget.hintText,
               hintStyle: context.appTextStyles.bodyMedium.copyWith(color: context.appColors.outline),

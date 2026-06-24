@@ -51,7 +51,7 @@ class AppColors {
   static const Color inverseOnSurface = Color(0xFFF1F1F1);
 
   // ── Surface Containers ───────────────────────────────────────────────────
-  static const Color surfaceContainerLowest = Color(0xB8FFFFFF); // 72% opacity
+  static const Color surfaceContainerLowest = Color(0xE6FFFFFF); // 90% opacity
   static const Color surfaceContainerLow = Color(0xFFEEF1FA);
   static const Color surfaceContainer = Color(0xFFEEEEEE);
   static const Color surfaceContainerHigh = Color(0xFFE8E8E8);
@@ -116,9 +116,12 @@ class AppDarkColors {
   // ── Background & Surface ─────────────────────────────────────────────────
   static const Color background = Color(0xFF0B0E1A);
   static const Color surface = Color(0xFF0B0E1A);
-  static const Color surfaceContainerLowest = Color(0xA61B2030); // 65% opacity
+  static const Color surfaceContainerLowest = Color(0xE61B2030); // 90% opacity
   static const Color surfaceContainerLow = Color(0xFF141829);
   static const Color surfaceContainer = Color(0xFF2C2C2E);
+  static const Color surfaceContainerHigh = Color(0xFF252A3D); // input field bg in dark
+  static const Color surfaceContainerHighest = Color(0xFF2E3347);
+  static const Color surfaceVariant = Color(0xFF333849);
   static const Color onSurface = Color(0xFFEEF0F6);
   static const Color onSurfaceVariant = Color(0xFFC4C6D0);
 

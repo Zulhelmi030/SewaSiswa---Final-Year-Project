@@ -35,6 +35,10 @@ import '../modules/account_nav/personal_info_screen.dart';
 import '../modules/account_nav/security_screen.dart';
 import '../modules/account_nav/notifications_screen.dart';
 
+import '../modules/account_nav/blocked_users_screen.dart';
+
+import '../modules/reports/earnings_report_screen.dart';
+
 /// Data class passed as [extra] to the /chat route.
 class ChatArgs {
   final String receiverId;
@@ -212,6 +216,10 @@ class AppRoutes {
           builder: (context, state) => const SecurityScreen(),
         ),
         GoRoute(
+          path: '/change-password',
+          builder: (context, state) => const UpdatePasswordScreen(),
+        ),
+        GoRoute(
           path: '/manage-listing',
           builder: (context, state) => const ManageListingScreen(),
         ),
@@ -233,6 +241,14 @@ class AppRoutes {
           path: '/home/listings/edit',
           builder: (context, state) =>
               EditListingScreen(listing: state.extra as ListingModel),
+        ),
+        GoRoute(
+          path: '/blocked-users',
+          builder: (context, state) => const BlockedUsersScreen(),
+        ),
+        GoRoute(
+          path: '/earnings-report',
+          builder: (context, state) => const EarningsReportScreen(),
         ),
       ],
     );

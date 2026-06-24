@@ -33,7 +33,7 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
 
       final listingsRes = await _client
           .from('listings')
-          .select('id, title, monthly_rent, city, state, image_urls')
+          .select('id, title, monthly_rent, city, state, listing_photos(photo_url)')
           .eq('owner_id', widget.ownerId)
           .eq('status', 'available')
           .limit(3);
@@ -109,7 +109,10 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                 color: context.appColors.outlineVariant,
               ),
               const SizedBox(height: 16),
-              Text('Profile not found', style: context.appTextStyles.titleMedium),
+              Text(
+                'Profile not found',
+                style: context.appTextStyles.titleMedium,
+              ),
             ],
           ),
         ),
@@ -224,7 +227,9 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                       color: context.appColors.surfaceContainerLowest,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: context.appColors.outlineVariant.withValues(alpha: 0.5),
+                        color: context.appColors.outlineVariant.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                     ),
                     child: Column(
@@ -328,7 +333,8 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
   }
 
   Widget _buildListingTile(Map<String, dynamic> listing) {
-    final imageUrls = listing['image_urls'] as List<dynamic>? ?? [];
+    final photos = listing['listing_photos'] as List<dynamic>? ?? [];
+    final imageUrls = photos.map((p) => p['photo_url'] as String?).whereType<String>().toList();
     final title = listing['title'] as String? ?? 'Listing';
     final rent = (listing['monthly_rent'] as num?)?.toStringAsFixed(0) ?? '-';
     final city = listing['city'] as String? ?? '';
@@ -350,7 +356,7 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
             borderRadius: BorderRadius.circular(12),
             child: imageUrls.isNotEmpty
                 ? Image.network(
-                    imageUrls.first as String,
+                    imageUrls.first,
                     width: 72,
                     height: 72,
                     fit: BoxFit.cover,

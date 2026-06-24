@@ -40,13 +40,15 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
       if (mounted) {
         // Clear password recovery mode
         context.read<AuthService>().clearPasswordRecoveryMode();
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Password updated successfully!'),
             backgroundColor: context.appColors.success,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
 
@@ -60,7 +62,9 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
             content: Text(e.message),
             backgroundColor: context.appColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -68,10 +72,14 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('An unexpected error occurred. Please try again.'),
+            content: const Text(
+              'An unexpected error occurred. Please try again.',
+            ),
             backgroundColor: context.appColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -91,14 +99,20 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
         elevation: 0,
         title: Text(
           'Update Password',
-          style: TextStyle(color: context.appColors.textPrimary, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: context.appColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 16.0,
+            ),
             child: Form(
               key: _formKey,
               child: Column(

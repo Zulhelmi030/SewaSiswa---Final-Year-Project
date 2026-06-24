@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "537254543100",
+    "project_id": "fyp-notification-320cc",
+    "storage_bucket": "fyp-notification-320cc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:537254543100:android:a1b6fac594b40cc2ace179",
+        "android_client_info": {
+          "package_name": "com.example.finalyearproject"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUJnHCQc6_4kCbK_907RCzxPdmoJ06e0I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

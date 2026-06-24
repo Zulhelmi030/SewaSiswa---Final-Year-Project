@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -24,6 +25,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   String? _masterReceiptUrl;
   double _totalRent = 0.0;
   Duration _timeLeft = const Duration();
+  int _targetMonth = 1;
+  int _targetYear = 2026;
   List<Map<String, dynamic>> _housemates = [];
 
   Future<void> _loadData() async {
@@ -34,26 +37,24 @@ class _PaymentScreenState extends State<PaymentScreen> {
     try {
       final myRental = await supabase
           .from('rental_tenants')
-          .select('listing_id, due_day')
+          .select('listing_id')
           .eq('user_id', user.id)
           .single();
 
       final listingId = myRental['listing_id'];
-      final dueDay = myRental['due_day'] as int;
 
       final now = DateTime.now();
-      DateTime dueDate = DateTime(now.year, now.month, dueDay);
-      if (now.isAfter(dueDate)) {
-        dueDate = DateTime(now.year, now.month + 1, dueDay);
-      }
+
+      // dueDate calculation moved below after we check payment status
 
       final listing = await supabase
           .from('listings')
-          .select('owner_id, monthly_rent')
+          .select('owner_id, monthly_rent, due_day')
           .eq('id', listingId)
           .single();
 
       final isLeader = listing['owner_id'] == user.id;
+      final dueDay = listing['due_day'] as int? ?? 1; // Default to 1st if null
 
       // Fetch all tenants with their user info
       final tenantsData = await supabase
@@ -61,22 +62,62 @@ class _PaymentScreenState extends State<PaymentScreen> {
           .select('user_id, status, users(full_name)')
           .eq('listing_id', listingId);
 
-      // Fetch this month's payments for this listing to get receipt_url & paid status
-      final firstOfMonth = DateTime(now.year, now.month, 1).toIso8601String();
-      final paymentsData = await supabase
+      // Base the current cycle on the current calendar month
+      int targetMonth = now.month;
+      int targetYear = now.year;
+      DateTime currentDueDate = DateTime(targetYear, targetMonth, dueDay);
+
+      // Fetch this month's payments for this listing
+      var paymentsData = await supabase
           .from('payments')
           .select('sender_id, status, receipt_url')
           .eq('rental_id', listingId)
-          .gte('payment_date', firstOfMonth);
+          .eq('for_month', targetMonth)
+          .eq('for_year', targetYear);
 
-      // Build a map: user_id -> payment record
-      final Map<String, Map<String, dynamic>> paymentByUser = {};
+      var paymentByUser = <String, Map<String, dynamic>>{};
       for (var p in paymentsData) {
         paymentByUser[p['sender_id']] = p;
       }
 
+      var myPayment = paymentByUser[user.id];
+      bool isMyRentPaid = myPayment != null &&
+          (myPayment['status'] == 'paid' ||
+              myPayment['status'] == 'succeeded' ||
+              myPayment['status'] == 'pending');
+
+      // If we have already settled this month, shift target to next month
+      if (isMyRentPaid) {
+        currentDueDate = DateTime(targetYear, targetMonth + 1, dueDay);
+        targetMonth = currentDueDate.month;
+        targetYear = currentDueDate.year;
+
+        // Re-fetch payments data for the new target month
+        paymentsData = await supabase
+            .from('payments')
+            .select('sender_id, status, receipt_url')
+            .eq('rental_id', listingId)
+            .eq('for_month', targetMonth)
+            .eq('for_year', targetYear);
+
+        paymentByUser.clear();
+        for (var p in paymentsData) {
+          paymentByUser[p['sender_id']] = p;
+        }
+        
+        myPayment = paymentByUser[user.id];
+        isMyRentPaid = myPayment != null &&
+          (myPayment['status'] == 'paid' ||
+              myPayment['status'] == 'succeeded' ||
+              myPayment['status'] == 'pending');
+      }
+
+      DateTime displayDueDate = currentDueDate;
+
       final totalTenants = tenantsData.length;
+      debugPrint('totalTenants: $totalTenants');
       final totalRent = (listing['monthly_rent'] as num?)?.toDouble() ?? 0.0;
+      debugPrint('totalRent: $totalRent');
 
       // Fetch the master receipt (leader to owner) for this month
       final masterPaymentData = await supabase
@@ -84,7 +125,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
           .select('receipt_url')
           .eq('rental_id', listingId)
           .eq('method', 'master_receipt')
-          .gte('payment_date', firstOfMonth)
+          .eq('for_month', targetMonth)
+          .eq('for_year', targetYear)
           .maybeSingle();
 
       final List<Map<String, dynamic>> parsedHousemates = [];
@@ -112,10 +154,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
           _ownerId = listing['owner_id'];
           _masterReceiptUrl = masterPaymentData?['receipt_url'];
           _totalRent = totalRent;
-          _timeLeft = dueDate.difference(now);
+          _targetMonth = targetMonth;
+          _targetYear = targetYear;
+          final diff = displayDueDate.difference(now);
+          _timeLeft = diff.isNegative ? Duration.zero : diff;
           if (totalTenants > 0) {
             _rentPerPerson = totalRent / totalTenants;
           }
+          debugPrint('rentPerPerson: $_rentPerPerson');
           _housemates = parsedHousemates;
           _isLoading = false;
         });
@@ -167,6 +213,28 @@ class _PaymentScreenState extends State<PaymentScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Payment Information'),
+                  content: const Text(
+                    'You can only make a payment when the due date is 10 days or less away.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Got it'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -256,7 +324,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
       decoration: BoxDecoration(
         color: context.appColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border(left: BorderSide(color: context.appColors.primary, width: 4)),
+        border: Border(
+          left: BorderSide(color: context.appColors.primary, width: 4),
+        ),
         boxShadow: [
           BoxShadow(
             color: context.appColors.primary.withValues(alpha: 0.05),
@@ -338,25 +408,29 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Widget _buildMakePaymentButton() {
     return FilledButton(
-      onPressed: () async {
-        final amountInCents = (_rentPerPerson * 100).toInt();
-        if (amountInCents <= 0) return;
+      onPressed: _timeLeft.inDays <= 10
+          ? () async {
+              final amountInCents = (_rentPerPerson * 100).toInt();
+              if (amountInCents <= 0) return;
 
-        setState(() => _isLoading = true);
-        final paymentService = PaymentService();
-        await paymentService.makePayment(
-          context: context,
-          amountInCents: amountInCents,
-          currency: 'myr',
-          metadata: {
-            'rental_id': _listingId,
-            'sender_id': Supabase.instance.client.auth.currentUser!.id,
-            'receiver_id': _ownerId,
-            'method': 'gateway',
-          },
-        );
-        setState(() => _isLoading = false);
-      },
+              setState(() => _isLoading = true);
+              final paymentService = PaymentService();
+              await paymentService.makePayment(
+                context: context,
+                amountInCents: amountInCents,
+                currency: 'myr',
+                metadata: {
+                  'rental_id': _listingId,
+                  'sender_id': Supabase.instance.client.auth.currentUser!.id,
+                  'receiver_id': _ownerId,
+                  'method': 'gateway',
+                  'for_month': _targetMonth.toString(),
+                  'for_year': _targetYear.toString(),
+                },
+              );
+              setState(() => _isLoading = false);
+            }
+          : null,
       style: FilledButton.styleFrom(
         backgroundColor: context.appColors.primary,
         shape: const StadiumBorder(),
@@ -506,13 +580,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   icon: const Icon(Icons.receipt_long_rounded),
                   color: context.appColors.primary,
                   style: IconButton.styleFrom(
-                    backgroundColor: context.appColors.primary.withValues(alpha: 0.1),
+                    backgroundColor: context.appColors.primary.withValues(
+                      alpha: 0.1,
+                    ),
                   ),
                 ),
                 if (isMe) ...[
                   const SizedBox(width: 8),
                   IconButton(
-                    onPressed: () => _uploadReceipt(member),
+                    onPressed: _timeLeft.inDays <= 10
+                        ? () => _uploadReceipt(member)
+                        : null,
                     icon: const Icon(Icons.edit_rounded, size: 20),
                     color: context.appColors.onSurfaceVariant,
                   ),
@@ -521,7 +599,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
             )
           else if (isMe)
             IconButton(
-              onPressed: () => _uploadReceipt(member),
+              onPressed: _timeLeft.inDays <= 10
+                  ? () => _uploadReceipt(member)
+                  : null,
               icon: const Icon(Icons.upload_file_rounded),
               color: context.appColors.onSurfaceVariant,
               style: IconButton.styleFrom(
@@ -552,16 +632,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
     if (publicUrl != null) {
       try {
         final supabase = Supabase.instance.client;
-        final now = DateTime.now();
-        final firstOfMonth = DateTime(now.year, now.month, 1).toIso8601String();
-
         // Try to update an existing payment record for this month first
         final existing = await supabase
             .from('payments')
             .select('id')
             .eq('rental_id', _listingId)
             .eq('sender_id', member['user_id'])
-            .gte('payment_date', firstOfMonth)
+            .eq('for_month', _targetMonth)
+            .eq('for_year', _targetYear)
             .maybeSingle();
 
         if (existing != null) {
@@ -576,9 +654,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
             'sender_id': member['user_id'],
             'receiver_id': _ownerId,
             'amount': _rentPerPerson,
-            'status': 'pending',
+            'status': 'paid',
             'method': 'manual',
             'receipt_url': publicUrl,
+            'for_month': _targetMonth,
+            'for_year': _targetYear,
           });
         }
 
@@ -587,7 +667,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
           await supabase.from('notifications').insert({
             'user_id': _ownerId,
             'title': 'Receipt Uploaded',
-            'message': '${member['name']} has uploaded a manual payment receipt for RM ${_rentPerPerson.toStringAsFixed(0)}.',
+            'message':
+                '${member['name']} has uploaded a manual payment receipt for RM ${_rentPerPerson.toStringAsFixed(0)}.',
             'type': 'payment',
           });
         } catch (_) {}
@@ -697,10 +778,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
   // ── Paid to Owner Card ────────────────────────────────────────────────────
 
   Widget _buildPaidToOwnerCard() {
-    // Count how many members are marked paid this month
     final paidCount = _housemates.where((m) => m['status'] == 'paid').length;
+
     final total = _housemates.length;
     final allPaid = paidCount == total;
+
+    final collectedAmount = paidCount * _rentPerPerson;
+    final pendingAmount = _totalRent - collectedAmount;
+    final percentage = _totalRent > 0 ? (collectedAmount / _totalRent) : 0.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -738,58 +823,129 @@ class _PaymentScreenState extends State<PaymentScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Theme.of(context).brightness == Brightness.dark 
-                    ? const Color(0xFF243B82) 
-                    : const Color(0xFF1B3A8C),
-                Theme.of(context).brightness == Brightness.dark 
-                    ? const Color(0xFF182C66) 
-                    : const Color(0xFF14296B),
-              ],
-            ),
+            color: context.appColors.surface,
             borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: context.appColors.primary.withValues(alpha: 0.15),
-                blurRadius: 32,
-                offset: const Offset(0, 8),
-              ),
-            ],
+            border: Border.all(
+              color: context.appColors.outlineVariant.withValues(alpha: 0.5),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Total Collected',
-                style: context.appTextStyles.bodyMedium.copyWith(
-                  color: const Color(0xFFC7D4F5), // on-primary-container
-                  fontWeight: FontWeight.w500,
+                'Rent Collection Summary',
+                style: context.appTextStyles.titleMedium.copyWith(
+                  color: context.appColors.primary,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 24),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    'RM ${(_totalRent).toStringAsFixed(0)}',
-                    style: context.appTextStyles.headlineLarge.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -1,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Total',
+                        style: context.appTextStyles.labelMedium.copyWith(
+                          color: context.appColors.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'RM ${_totalRent.toStringAsFixed(0)}',
+                        style: context.appTextStyles.headlineSmall.copyWith(
+                          color: context.appColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    '.00',
-                    style: context.appTextStyles.titleMedium.copyWith(
-                      color: const Color(0xFFC7D4F5),
-                      fontWeight: FontWeight.w500,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: Colors.green,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Collected',
+                            style: context.appTextStyles.labelSmall.copyWith(
+                              color: context.appColors.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'RM ${collectedAmount.toStringAsFixed(0)}',
+                            style: context.appTextStyles.labelMedium.copyWith(
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Pending',
+                            style: context.appTextStyles.labelSmall.copyWith(
+                              color: context.appColors.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'RM ${pendingAmount.toStringAsFixed(0)}',
+                            style: context.appTextStyles.labelMedium.copyWith(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: percentage,
+                  minHeight: 6,
+                  backgroundColor: context.appColors.surfaceContainerHighest,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    context.appColors.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  '${(percentage * 100).toInt()}% Collected',
+                  style: context.appTextStyles.labelSmall.copyWith(
+                    color: context.appColors.onSurfaceVariant,
+                  ),
+                ),
               ),
               const SizedBox(height: 24),
               if (_masterReceiptUrl != null)
@@ -802,7 +958,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         label: const Text('View Master Receipt'),
                         style: FilledButton.styleFrom(
                           backgroundColor: context.appColors.secondaryContainer,
-                          foregroundColor: context.appColors.onSecondaryContainer,
+                          foregroundColor:
+                              context.appColors.onSecondaryContainer,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                       ),
@@ -843,6 +1000,29 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   /// Opens the system file manager so the house leader can upload the master receipt.
   Future<void> _uploadMasterReceipt() async {
+    final unpaidMembers = _housemates
+        .where((member) => member['status'] != 'paid')
+        .toList();
+    if (unpaidMembers.isNotEmpty) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Unpaid members found'),
+          actions: [
+            TextButton(
+              onPressed: () => context.pop(false), // user cancels
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => context.pop(true), // user confirms
+              child: const Text('Upload Anyway'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+
     final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
@@ -860,16 +1040,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
     if (publicUrl != null) {
       try {
         final supabase = Supabase.instance.client;
-        final now = DateTime.now();
-        final firstOfMonth = DateTime(now.year, now.month, 1).toIso8601String();
-
         // Try to update an existing master receipt record for this month
         final existing = await supabase
             .from('payments')
             .select('id')
             .eq('rental_id', _listingId)
             .eq('method', 'master_receipt')
-            .gte('payment_date', firstOfMonth)
+            .eq('for_month', _targetMonth)
+            .eq('for_year', _targetYear)
             .maybeSingle();
 
         if (existing != null) {
@@ -887,6 +1065,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
             'status': 'paid',
             'method': 'master_receipt',
             'receipt_url': publicUrl,
+            'for_month': _targetMonth,
+            'for_year': _targetYear,
           });
         }
 
@@ -895,10 +1075,23 @@ class _PaymentScreenState extends State<PaymentScreen> {
           await supabase.from('notifications').insert({
             'user_id': _ownerId,
             'title': 'Master Receipt Uploaded',
-            'message': 'The house leader has uploaded the master payment receipt for RM ${_totalRent.toStringAsFixed(0)}.',
+            'message':
+                'The house leader has uploaded the master payment receipt for RM ${_totalRent.toStringAsFixed(0)}.',
             'type': 'payment',
           });
         } catch (_) {}
+        for (final member in unpaidMembers) {
+          try {
+            await supabase.from('notifications').insert({
+              'user_id': member['user_id'],
+              'title': 'Late Payment Alert',
+              'body':
+                  'The master receipt has been uploaded but your payment is not recorded.',
+              'type': 'payment',
+              'related_id': _listingId,
+            });
+          } catch (_) {}
+        }
 
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(

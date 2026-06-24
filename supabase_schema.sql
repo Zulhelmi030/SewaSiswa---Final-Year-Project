@@ -63,7 +63,9 @@ CREATE TABLE public.payments (
   status TEXT NOT NULL, -- 'pending', 'completed', 'failed'
   method TEXT, -- From ERD (e.g., 'fpx', 'card')
   transaction_ref TEXT, -- From ERD
-  payment_date TIMESTAMPTZ DEFAULT NOW()
+  payment_date TIMESTAMPTZ DEFAULT NOW(),
+  for_month INTEGER NOT NULL,
+  for_year INTEGER NOT NULL
 );
 
 -- 6. Reviews Table (Maps to ReviewModel & ERD Review)
@@ -144,10 +146,7 @@ CREATE POLICY "Owners can manage their listing photos" ON public.listing_photos
 
 -- 3. Rental Tenants
 CREATE POLICY "Users and owners can view tenancy records" ON public.rental_tenants 
-  FOR SELECT USING (
-    auth.uid() = user_id OR 
-    auth.uid() IN (SELECT owner_id FROM public.listings WHERE id = listing_id)
-  );
+  FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "Owners manage tenants" ON public.rental_tenants 
   FOR ALL USING (
     auth.uid() IN (SELECT owner_id FROM public.listings WHERE id = listing_id)
@@ -188,3 +187,80 @@ CREATE POLICY "Users manage own notifications" ON public.notifications
 
 CREATE POLICY "Users manage own wishlists" ON public.wishlists 
   FOR ALL USING (auth.uid() = user_id);
+
+-- -----------------------------------------------------------------------------
+-- Scheduled Jobs & Cron
+-- -----------------------------------------------------------------------------
+
+-- Enable pg_cron
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+-- Create the notification function
+CREATE OR REPLACE FUNCTION public.check_and_notify_due_rent()
+RETURNS void AS $$
+DECLARE
+  rec RECORD;
+  current_due_date DATE;
+  target_month INTEGER;
+  target_year INTEGER;
+BEGIN
+  -- Loop through all active tenants
+  FOR rec IN 
+    SELECT rt.user_id, rt.listing_id, rt.due_day 
+    FROM public.rental_tenants rt 
+    WHERE rt.status = 'active' AND rt.due_day IS NOT NULL
+  LOOP
+    
+    -- Determine current due date
+    current_due_date := make_date(
+      EXTRACT(YEAR FROM CURRENT_DATE)::int, 
+      EXTRACT(MONTH FROM CURRENT_DATE)::int, 
+      rec.due_day
+    );
+    
+    -- If current_date is past this month's due date, the next cycle is next month
+    IF CURRENT_DATE > current_due_date THEN
+      current_due_date := current_due_date + interval '1 month';
+    END IF;
+    
+    target_month := EXTRACT(MONTH FROM current_due_date);
+    target_year := EXTRACT(YEAR FROM current_due_date);
+    
+    -- Check if a payment has already been made for this specific cycle
+    IF NOT EXISTS (
+      SELECT 1 FROM public.payments p 
+      WHERE p.rental_id = rec.listing_id 
+      AND p.sender_id = rec.user_id 
+      AND p.for_month = target_month 
+      AND p.for_year = target_year 
+      AND p.status IN ('paid', 'succeeded', 'pending')
+    ) THEN
+      
+      -- Check if due_date is exactly 3 days or less away (and not passed)
+      IF (current_due_date - CURRENT_DATE) <= 3 AND (current_due_date - CURRENT_DATE) >= 0 THEN
+        
+        -- Check if we already notified them for this cycle (e.g. in the last 4 days)
+        IF NOT EXISTS (
+          SELECT 1 FROM public.notifications n
+          WHERE n.user_id = rec.user_id
+          AND n.type = 'payment'
+          AND n.created_at >= (CURRENT_DATE - interval '4 days')
+        ) THEN
+          
+          -- Insert notification
+          INSERT INTO public.notifications (user_id, title, body, type)
+          VALUES (
+            rec.user_id, 
+            'Rent Due Soon!', 
+            'Your rent payment is due in ' || (current_due_date - CURRENT_DATE) || ' days.', 
+            'payment'
+          );
+        END IF;
+      END IF;
+    END IF;
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Schedule the job to run every day at 8:00 AM UTC
+-- SELECT cron.schedule('daily-rent-reminder', '0 8 * * *', $$ SELECT public.check_and_notify_due_rent(); $$);

@@ -39,6 +39,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   final _rentController = TextEditingController();
   final _depositController = TextEditingController();
   final _rulesController = TextEditingController();
+  final _dueDayController = TextEditingController(text: '1');
 
   // ImageService — inject the current Supabase client
   late final ImageService _imageService;
@@ -71,6 +72,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     _rentController.dispose();
     _depositController.dispose();
     _rulesController.dispose();
+    _dueDayController.dispose();
     super.dispose();
   }
 
@@ -430,6 +432,17 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          _buildTextField(
+            label: "Rent Due Day (1-28)",
+            placeholder: "e.g. 1 (for the 1st of every month)",
+            controller: _dueDayController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              NumericalRangeFormatter(min: 1, max: 28),
+            ],
+          ),
           const SizedBox(height: 24),
           Divider(color: context.appColors.surfaceVariant),
           const SizedBox(height: 24),
@@ -576,6 +589,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     String? prefixText,
     TextEditingController? controller,
     TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -594,6 +608,8 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
           controller: controller,
           maxLines: maxLines,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
+          style: TextStyle(color: context.appColors.textPrimary),
           decoration: InputDecoration(
             hintText: placeholder,
             prefixText: prefixText,
@@ -884,6 +900,11 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
       _showSnack('Please add at least one photo.');
       return;
     }
+    final dueDay = int.tryParse(_dueDayController.text.trim());
+    if (dueDay == null || dueDay < 1 || dueDay > 28) {
+      _showSnack('Please enter a valid due day (1-28).');
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -912,10 +933,11 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         'postcode': _postcodeController.text.trim(),
         'monthly_rent': rent,
         'deposit': double.tryParse(_depositController.text.trim()) ?? 0.0,
+        'due_day': dueDay,
         'gender_preference': _selectedGender,
-        'house_rules': _rulesController.text.trim(),
+        'house_rule': _rulesController.text
+            .trim(), // FIXED: singular, matches DB
         'facilities': _selectedFacilities,
-        'images': imageUrls,
         'owner_id': Supabase.instance.client.auth.currentUser!.id,
         'total_slots': _totalSlots,
         'occupied_slots': 0,
@@ -923,9 +945,27 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         if (_longitude != null) 'longitude': _longitude,
       };
 
-      // Step 4 — Ensure user has landlord role, then Insert
+      // Step 4 — Ensure user has landlord role, then Insert Listing
       await _ensureLandlordRole();
-      await Supabase.instance.client.from('listings').insert(payload);
+
+      final insertedListing = await Supabase.instance.client
+          .from('listings')
+          .insert(payload)
+          .select('id')
+          .single();
+
+      final listingId = insertedListing['id'];
+
+      // Step 5 — Insert photos into listing_photos table
+      if (imageUrls.isNotEmpty) {
+        final photoPayloads = imageUrls
+            .map((url) => {'listing_id': listingId, 'photo_url': url})
+            .toList();
+
+        await Supabase.instance.client
+            .from('listing_photos')
+            .insert(photoPayloads);
+      }
 
       if (mounted) {
         if (geocodeFailed) {
@@ -1000,5 +1040,39 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         ),
       ),
     );
+  }
+}
+
+class NumericalRangeFormatter extends TextInputFormatter {
+  final int min;
+  final int max;
+
+  NumericalRangeFormatter({required this.min, required this.max});
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) {
+      return newValue;
+    }
+    final intValue = int.tryParse(newValue.text);
+    if (intValue == null) {
+      return oldValue;
+    }
+    if (intValue < min) {
+      return TextEditingValue(
+        text: min.toString(),
+        selection: TextSelection.collapsed(offset: min.toString().length),
+      );
+    }
+    if (intValue > max) {
+      return TextEditingValue(
+        text: max.toString(),
+        selection: TextSelection.collapsed(offset: max.toString().length),
+      );
+    }
+    return newValue;
   }
 }

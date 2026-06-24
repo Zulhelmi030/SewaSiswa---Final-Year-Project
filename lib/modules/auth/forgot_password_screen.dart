@@ -42,13 +42,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
       parent: _animationController,
       curve: Curves.easeOut,
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
     _scaleAnimation = Tween<double>(begin: 0.7, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
     );
@@ -85,7 +85,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     } on AuthException catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        final seconds = e.statusCode == '429' ? _parseRateLimitSeconds(e.message) : null;
+        final seconds = e.statusCode == '429'
+            ? _parseRateLimitSeconds(e.message)
+            : null;
         final message = seconds != null
             ? 'Too many requests. Please wait $seconds seconds before trying again.'
             : e.message;
@@ -94,7 +96,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
             content: Text(message),
             backgroundColor: context.appColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -103,10 +107,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('An unexpected error occurred. Please try again.'),
+            content: const Text(
+              'An unexpected error occurred. Please try again.',
+            ),
             backgroundColor: context.appColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -131,7 +139,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 16.0,
+            ),
             child: _emailSent ? _buildSuccessState() : _buildEmailForm(),
           ),
         ),
@@ -160,7 +171,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: context.appColors.primary.withValues(alpha: 0.25),
+                        color: context.appColors.primary.withValues(
+                          alpha: 0.25,
+                        ),
                         blurRadius: 24,
                         offset: const Offset(0, 8),
                       ),
@@ -209,8 +222,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                   if (value == null || value.isEmpty) {
                     return 'Please enter your email address';
                   }
-                  if (!RegExp(r'^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$')
-                      .hasMatch(value)) {
+                  if (!RegExp(
+                    r'^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$',
+                  ).hasMatch(value)) {
                     return 'Please enter a valid email address';
                   }
                   return null;
@@ -309,7 +323,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                   height: 1.55,
                 ),
                 children: [
-                  const TextSpan(text: 'A password reset link has been sent to\n'),
+                  const TextSpan(
+                    text: 'A password reset link has been sent to\n',
+                  ),
                   TextSpan(
                     text: _emailController.text.trim(),
                     style: TextStyle(
@@ -317,7 +333,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                       color: context.appColors.primary,
                     ),
                   ),
-                  const TextSpan(text: '\n\nPlease check your inbox and follow the link to reset your password.'),
+                  const TextSpan(
+                    text:
+                        '\n\nPlease check your inbox and follow the link to reset your password.',
+                  ),
                 ],
               ),
             ),

@@ -38,7 +38,7 @@ serve(async (request) => {
     console.log('Payment succeeded with metadata:', metadata)
 
     // Check if we have the necessary metadata
-    if (metadata && metadata.rental_id && metadata.sender_id && metadata.receiver_id) {
+    if (metadata && metadata.rental_id && metadata.sender_id && metadata.receiver_id && metadata.for_month && metadata.for_year) {
       
       // Initialize Supabase admin client to bypass Row Level Security
       const supabaseAdmin = createClient(
@@ -57,11 +57,13 @@ serve(async (request) => {
             amount: paymentIntent.amount / 100.0, // Convert from cents to ringgit/dollars
             status: 'paid', // Mark it directly as paid since the webhook confirmed it
             method: metadata.method || 'gateway',
+            for_month: parseInt(metadata.for_month),
+            for_year: parseInt(metadata.for_year),
           })
 
         if (error) {
           console.error('Supabase DB Insert Error:', error)
-          return new Response(JSON.stringify({ error: 'DB insert failed' }), { status: 500 })
+          return new Response(JSON.stringify({ error: 'DB insert failed', details: error }), { status: 500 })
         }
 
         console.log('Successfully inserted payment into database!')

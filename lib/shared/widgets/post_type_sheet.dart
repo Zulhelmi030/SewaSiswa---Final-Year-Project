@@ -44,14 +44,19 @@ void showPostTypeSheet(BuildContext context) {
                   context.push('/home/listings/create');
                 },
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   child: Row(
                     children: [
                       Container(
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: context.appColors.primary.withValues(alpha: 0.1),
+                          color: context.appColors.primary.withValues(
+                            alpha: 0.1,
+                          ),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -79,12 +84,15 @@ void showPostTypeSheet(BuildContext context) {
                         ],
                       ),
                       const Spacer(),
-                      Icon(Icons.chevron_right, color: context.appColors.outline),
+                      Icon(
+                        Icons.chevron_right,
+                        color: context.appColors.outline,
+                      ),
                     ],
                   ),
                 ),
               ),
-              
+
               // Option 2: Find housemates
               InkWell(
                 onTap: () {
@@ -92,14 +100,19 @@ void showPostTypeSheet(BuildContext context) {
                   context.push('/housemate-post');
                 },
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   child: Row(
                     children: [
                       Container(
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: context.appColors.secondary.withValues(alpha: 0.1),
+                          color: context.appColors.secondary.withValues(
+                            alpha: 0.1,
+                          ),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -127,7 +140,10 @@ void showPostTypeSheet(BuildContext context) {
                         ],
                       ),
                       const Spacer(),
-                      Icon(Icons.chevron_right, color: context.appColors.outline),
+                      Icon(
+                        Icons.chevron_right,
+                        color: context.appColors.outline,
+                      ),
                     ],
                   ),
                 ),

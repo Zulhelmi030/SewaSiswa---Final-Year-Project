@@ -99,10 +99,9 @@ class _ListingMembersScreenState extends State<ListingMembersScreen>
           'type': 'system',
           'related_id': widget.listing.id,
         });
-
       } else if (action == 'reject') {
         await _client.from('rental_tenants').delete().eq('id', id);
-        
+
         // Notify user they were rejected
         await _client.from('notifications').insert({
           'user_id': userId,
@@ -114,7 +113,6 @@ class _ListingMembersScreenState extends State<ListingMembersScreen>
       }
 
       _fetchData(); // refresh lists
-
     } catch (e) {
       debugPrint('Error handling request: $e');
       if (mounted) {
@@ -141,7 +139,9 @@ class _ListingMembersScreenState extends State<ListingMembersScreen>
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: context.appColors.error),
+            style: TextButton.styleFrom(
+              foregroundColor: context.appColors.error,
+            ),
             child: const Text('Remove'),
           ),
         ],
@@ -262,7 +262,9 @@ class _ListingMembersScreenState extends State<ListingMembersScreen>
         elevation: 0,
         title: Text(
           'Manage Members',
-          style: context.appTextStyles.titleLarge.copyWith(fontWeight: FontWeight.bold),
+          style: context.appTextStyles.titleLarge.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         bottom: TabBar(
           controller: _tabController,
@@ -279,10 +281,7 @@ class _ListingMembersScreenState extends State<ListingMembersScreen>
           ? const Center(child: CircularProgressIndicator())
           : TabBarView(
               controller: _tabController,
-              children: [
-                _buildActiveMembersTab(),
-                _buildRequestsTab(),
-              ],
+              children: [_buildActiveMembersTab(), _buildRequestsTab()],
             ),
       floatingActionButton: _tabController.index == 0
           ? FloatingActionButton.extended(
@@ -301,7 +300,9 @@ class _ListingMembersScreenState extends State<ListingMembersScreen>
       return Center(
         child: Text(
           'No active members yet.',
-          style: context.appTextStyles.bodyLarge.copyWith(color: context.appColors.outline),
+          style: context.appTextStyles.bodyLarge.copyWith(
+            color: context.appColors.outline,
+          ),
         ),
       );
     }
@@ -318,7 +319,9 @@ class _ListingMembersScreenState extends State<ListingMembersScreen>
 
         return ListTile(
           tileColor: context.appColors.surfaceContainerLowest,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           leading: CircleAvatar(
             backgroundColor: context.appColors.primaryFixed,
             child: Text(
@@ -328,17 +331,27 @@ class _ListingMembersScreenState extends State<ListingMembersScreen>
           ),
           title: Text(
             name,
-            style: context.appTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+            style: context.appTextStyles.titleMedium.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           subtitle: Text(email, style: context.appTextStyles.bodySmall),
           trailing: isOwner
               ? Chip(
                   label: const Text('Owner'),
-                  backgroundColor: context.appColors.primary.withValues(alpha: 0.1),
-                  labelStyle: TextStyle(color: context.appColors.primary, fontSize: 12),
+                  backgroundColor: context.appColors.primary.withValues(
+                    alpha: 0.1,
+                  ),
+                  labelStyle: TextStyle(
+                    color: context.appColors.primary,
+                    fontSize: 12,
+                  ),
                 )
               : IconButton(
-                  icon: Icon(Icons.remove_circle_outline, color: context.appColors.error),
+                  icon: Icon(
+                    Icons.remove_circle_outline,
+                    color: context.appColors.error,
+                  ),
                   onPressed: () => _removeMember(row['id']),
                   tooltip: 'Remove Member',
                 ),
@@ -352,7 +365,9 @@ class _ListingMembersScreenState extends State<ListingMembersScreen>
       return Center(
         child: Text(
           'No pending requests.',
-          style: context.appTextStyles.bodyLarge.copyWith(color: context.appColors.outline),
+          style: context.appTextStyles.bodyLarge.copyWith(
+            color: context.appColors.outline,
+          ),
         ),
       );
     }
@@ -371,7 +386,9 @@ class _ListingMembersScreenState extends State<ListingMembersScreen>
           decoration: BoxDecoration(
             color: context.appColors.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: context.appColors.outlineVariant.withValues(alpha: 0.5)),
+            border: Border.all(
+              color: context.appColors.outlineVariant.withValues(alpha: 0.5),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,7 +399,9 @@ class _ListingMembersScreenState extends State<ListingMembersScreen>
                     backgroundColor: context.appColors.secondaryContainer,
                     child: Text(
                       name.isNotEmpty ? name[0].toUpperCase() : '?',
-                      style: TextStyle(color: context.appColors.onSecondaryContainer),
+                      style: TextStyle(
+                        color: context.appColors.onSecondaryContainer,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -392,7 +411,9 @@ class _ListingMembersScreenState extends State<ListingMembersScreen>
                       children: [
                         Text(
                           name,
-                          style: context.appTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                          style: context.appTextStyles.titleMedium.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Text(email, style: context.appTextStyles.bodySmall),
                       ],
@@ -405,15 +426,19 @@ class _ListingMembersScreenState extends State<ListingMembersScreen>
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => _handleRequest(row['id'], 'reject', row['user_id']),
-                      style: OutlinedButton.styleFrom(foregroundColor: context.appColors.error),
+                      onPressed: () =>
+                          _handleRequest(row['id'], 'reject', row['user_id']),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: context.appColors.error,
+                      ),
                       child: const Text('Decline'),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => _handleRequest(row['id'], 'accept', row['user_id']),
+                      onPressed: () =>
+                          _handleRequest(row['id'], 'accept', row['user_id']),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: context.appColors.primary,
                         foregroundColor: Colors.white,

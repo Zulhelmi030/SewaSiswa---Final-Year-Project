@@ -9,6 +9,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:finalyearproject/core/styles/app_theme_extensions.dart';
 import '../../shared/widgets/user_avatar.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ListingDetailScreen extends StatefulWidget {
   final ListingModel? listing;
@@ -32,11 +35,36 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   String? _ownerAvatarUrl;
   int? _ownerMemberSinceYear;
   String? _ownerBio;
+  bool _isTenantElsewhere = false;
 
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  /// UTeM Main Campus coordinates
+  static const double _utemLat = 2.3130;
+  static const double _utemLng = 102.3185;
+
+  /// Returns a formatted distance string from the listing to UTeM Main Campus.
+  String _distanceToUTeM(ListingModel? listing) {
+    if (listing == null ||
+        (listing.latitude == 0.0 && listing.longitude == 0.0)) {
+      return 'Distance unavailable';
+    }
+    final metres = Geolocator.distanceBetween(
+      listing.latitude,
+      listing.longitude,
+      _utemLat,
+      _utemLng,
+    );
+    if (metres < 1000) {
+      return '${metres.toStringAsFixed(0)} m from UTeM Main Campus';
+    } else {
+      final km = metres / 1000;
+      return '${km.toStringAsFixed(1)} km from UTeM Main Campus';
+    }
   }
 
   @override
@@ -124,14 +152,28 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     final userId = _client.auth.currentUser?.id;
     if (listingId == null || userId == null) return;
     try {
-      final row = await _client
+      final existingApplications = await _client
           .from('rental_tenants')
-          .select('status')
+          .select('listing_id, status')
           .eq('user_id', userId)
-          .eq('listing_id', listingId)
-          .maybeSingle();
+          .neq('status', 'rejected');
+      
       if (mounted) {
-        setState(() => _applicationStatus = row?['status'] as String?);
+        String? statusForThis;
+        bool inAnotherHouse = false;
+        
+        for (final app in existingApplications) {
+          if (app['listing_id'] == listingId) {
+            statusForThis = app['status'] as String?;
+          } else {
+            inAnotherHouse = true;
+          }
+        }
+        
+        setState(() {
+          _applicationStatus = statusForThis;
+          _isTenantElsewhere = inAnotherHouse;
+        });
       }
     } catch (e) {
       debugPrint('Error fetching application status: $e');
@@ -149,7 +191,6 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
       await _client.from('rental_tenants').insert({
         'listing_id': listingId,
         'user_id': userId,
-        'tenant_role': 'house_member',
         'status': 'pending',
       });
 
@@ -194,6 +235,24 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     } finally {
       if (mounted) setState(() => _isApplying = false);
     }
+  }
+
+  void _shareListing() {
+    final listing = widget.listing;
+    if (listing == null) return;
+
+    final rent = listing.monthlyRent.toStringAsFixed(0);
+    final text =
+        'Check out this amazing place on SewaSiswa!\n\n'
+        '${listing.title}\n'
+        'Location: ${listing.address}\n'
+        'Rent: RM $rent/mo\n\n'
+        'Download the app to view more details!';
+
+    SharePlus.instance.share(ShareParams(
+      text: text,
+      subject: 'House for Rent: ${listing.title}',
+    ));
   }
 
   @override
@@ -291,13 +350,29 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         children: [
           imageUrls.isNotEmpty
               ? PageView.builder(
+                  allowImplicitScrolling: true,
                   controller: _pageController, // ← wires _pageController
                   itemCount: imageUrls.length,
                   onPageChanged: (index) => setState(
                     () => _currentPage = index,
                   ), // ← wires _currentPage
-                  itemBuilder: (context, index) =>
-                      Image.network(imageUrls[index], fit: BoxFit.cover),
+                  itemBuilder: (context, index) => CachedNetworkImage(
+                    imageUrl: imageUrls[index],
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      color: context.appColors.surfaceContainerLow,
+                      child: const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: context.appColors.surfaceContainerLow,
+                      child: Icon(
+                        Icons.broken_image_outlined,
+                        color: context.appColors.outline,
+                      ),
+                    ),
+                  ),
                 )
               : Container(
                   color: Colors.grey[300],
@@ -321,7 +396,10 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                     ),
                     Row(
                       children: [
-                        _buildGlassButton(icon: Icons.share, onTap: () {}),
+                        _buildGlassButton(
+                          icon: Icons.share,
+                          onTap: _shareListing,
+                        ),
                         const SizedBox(width: 12),
                         _buildGlassButton(
                           icon: _isFavourited
@@ -468,7 +546,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    "0.8 km from UTeM Main Campus", // In a real app, calculate this
+                    _distanceToUTeM(widget.listing),
                     style: context.appTextStyles.labelMedium.copyWith(
                       color: context.appColors.onPrimaryFixed,
                       fontWeight: FontWeight.w600,
@@ -633,9 +711,31 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
           ),
         ),
 
-        if (rulesList.isNotEmpty) ...[
+        if (rulesList.isNotEmpty || (listing.deposit != null && listing.deposit! > 0)) ...[
           const SizedBox(height: 32),
-          Text("House Rules", style: context.appTextStyles.titleLarge),
+          Text("Rules & Deposit", style: context.appTextStyles.titleLarge),
+          const SizedBox(height: 16),
+          
+          if (listing.deposit != null && listing.deposit! > 0)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.payments_outlined, color: context.appColors.primary, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      "RM ${listing.deposit!.toStringAsFixed(0)} deposit is required. Deposit is payable directly to the owner upon agreement (handled outside this app).",
+                      style: context.appTextStyles.bodyMedium.copyWith(
+                        color: context.appColors.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           const SizedBox(height: 16),
           ...rulesList.map((rule) {
             if (rule.trim().isEmpty) return const SizedBox.shrink();
@@ -895,12 +995,11 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: context.appColors.surfaceContainerLowest.withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: context.appColors.glassOutline,
-              width: 1,
+            color: context.appColors.surfaceContainerLowest.withValues(
+              alpha: 0.8,
             ),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: context.appColors.glassOutline, width: 1),
             boxShadow: [
               BoxShadow(
                 color: context.appColors.primary.withValues(alpha: 0.12),
@@ -937,33 +1036,34 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   ),
                   Row(
                     children: [
-                      // Chat Button
-                      Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: context.appColors.surfaceContainerHigh,
-                        ),
-                        child: IconButton(
-                          onPressed: () {
-                            final listing = widget.listing;
-                            if (listing == null) return;
-                            context.push(
-                              '/chat',
-                              extra: ChatArgs(
-                                receiverId: listing.ownerId,
-                                receiverName: _ownerName,
-                                listingId: listing.id,
-                                listingTitle: listing.title,
-                              ),
-                            );
-                          },
-                          icon: Icon(
-                            Icons.chat,
-                            color: context.appColors.primary,
+                      // Chat Button — only shown to non-owners
+                      if (_client.auth.currentUser?.id != listing.ownerId)
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: context.appColors.surfaceContainerHigh,
                           ),
-                          tooltip: 'Chat with Owner',
+                          child: IconButton(
+                            onPressed: () {
+                              final l = widget.listing;
+                              if (l == null) return;
+                              context.push(
+                                '/chat',
+                                extra: ChatArgs(
+                                  receiverId: l.ownerId,
+                                  receiverName: _ownerName,
+                                  listingId: l.id,
+                                  listingTitle: l.title,
+                                ),
+                              );
+                            },
+                            icon: Icon(
+                              Icons.chat,
+                              color: context.appColors.primary,
+                            ),
+                            tooltip: 'Chat with Owner',
+                          ),
                         ),
-                      ),
                       const SizedBox(width: 12),
 
                       // Apply Button
@@ -971,17 +1071,38 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                         onPressed:
                             (_applicationStatus == null &&
                                 !_isApplying &&
-                                _client.auth.currentUser?.id != listing.ownerId)
-                            ? _applyForListing
-                            : null,
+                                _client.auth.currentUser?.id != listing.ownerId &&
+                                !_isTenantElsewhere)
+                            ? () {
+                                if (_isTenantElsewhere) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('You are already a tenant in another house. You must be removed by an admin to apply again.'),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                _applyForListing();
+                              }
+                            : (_isTenantElsewhere && _applicationStatus == null) ? () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('You are already a tenant in another house. You must be removed by an admin to apply again.'),
+                                  ),
+                                );
+                              } : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _applicationStatus == 'pending'
+                          backgroundColor: (_isTenantElsewhere && _applicationStatus == null)
+                              ? context.appColors.surfaceContainerHigh
+                              : _applicationStatus == 'pending'
                               ? Colors.orange
                               : _applicationStatus == 'active'
                               ? Colors.green
                               : context.appColors.primaryContainer,
-                          foregroundColor: _applicationStatus == 'pending' || _applicationStatus == 'active' 
-                              ? Colors.white 
+                          foregroundColor:
+                              _applicationStatus == 'pending' ||
+                                  _applicationStatus == 'active'
+                              ? Colors.white
                               : context.appColors.onPrimaryContainer,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 24,
@@ -1004,7 +1125,9 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                 ),
                               )
                             : Text(
-                                _applicationStatus == 'pending'
+                                (_isTenantElsewhere && _applicationStatus == null)
+                                    ? 'Cannot Apply'
+                                    : _applicationStatus == 'pending'
                                     ? 'Requested'
                                     : _applicationStatus == 'active'
                                     ? 'Joined'
@@ -1012,7 +1135,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                 style: context.appTextStyles.labelMedium
                                     .copyWith(
                                       color:
-                                          (_applicationStatus == null &&
+                                          ((_applicationStatus == null && !_isTenantElsewhere) &&
                                               _client.auth.currentUser?.id !=
                                                   listing.ownerId)
                                           ? Colors.white
